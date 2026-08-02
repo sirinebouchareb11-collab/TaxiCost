@@ -1,0 +1,22 @@
+{
+  "name": "TaxiCost",
+  "short_name": "TaxiCost",
+  "description": "Compteur intelligent pour taxi",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#FFFBF0",
+  "theme_color": "#FFC107",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

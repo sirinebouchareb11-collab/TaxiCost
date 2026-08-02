@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>TaxiCost</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#FFC107">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ===================== ÉCRAN LOGIN ===================== -->
+  <div class="screen active" id="s-login">
+    <div class="auth-body">
+      <div class="auth-logo">
+        <svg width="48" height="48" viewBox="0 0 84 70" fill="none">
+          <path d="M14 28 L18 12 Q20 6 27 6 L57 6 Q64 6 66 12 L70 28" fill="#1a1a2e"/>
+          <rect x="4" y="28" width="76" height="22" rx="8" fill="#1a1a2e"/>
+          <rect x="0" y="44" width="84" height="16" rx="6" fill="#1a1a2e"/>
+          <circle cx="16" cy="62" r="8" fill="#FFC107"/>
+          <circle cx="16" cy="62" r="3.5" fill="#1a1a2e"/>
+          <circle cx="68" cy="62" r="8" fill="#FFC107"/>
+          <circle cx="68" cy="62" r="3.5" fill="#1a1a2e"/>
+          <rect x="22" y="14" width="18" height="11" rx="3" fill="#FFC107"/>
+          <rect x="44" y="14" width="18" height="11" rx="3" fill="#FFC107"/>
+          <rect x="33" y="0" width="18" height="8" rx="2" fill="#FFC107"/>
+        </svg>
+      </div>
+      <div class="auth-title">TaxiCost</div>
+      <div class="auth-subtitle">Connectez-vous pour continuer</div>
+      <div class="auth-form">
+        <input class="auth-input" id="login-email" type="email" placeholder="Email" autocomplete="email">
+        <input class="auth-input" id="login-password" type="password" placeholder="Mot de passe" autocomplete="current-password">
+        <div class="auth-error" id="login-error"></div>
+        <button class="btn-main" onclick="doLogin()">Se connecter</button>
+        <button class="auth-link" onclick="showScreen('s-register')">Pas encore de compte ? S'inscrire</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== ÉCRAN INSCRIPTION ===================== -->
+  <div class="screen" id="s-register">
+    <div class="auth-body">
+      <div class="auth-logo">
+        <svg width="48" height="48" viewBox="0 0 84 70" fill="none">
+          <path d="M14 28 L18 12 Q20 6 27 6 L57 6 Q64 6 66 12 L70 28" fill="#1a1a2e"/>
+          <rect x="4" y="28" width="76" height="22" rx="8" fill="#1a1a2e"/>
+          <rect x="0" y="44" width="84" height="16" rx="6" fill="#1a1a2e"/>
+          <circle cx="16" cy="62" r="8" fill="#FFC107"/>
+          <circle cx="16" cy="62" r="3.5" fill="#1a1a2e"/>
+          <circle cx="68" cy="62" r="8" fill="#FFC107"/>
+          <circle cx="68" cy="62" r="3.5" fill="#1a1a2e"/>
+          <rect x="22" y="14" width="18" height="11" rx="3" fill="#FFC107"/>
+          <rect x="44" y="14" width="18" height="11" rx="3" fill="#FFC107"/>
+          <rect x="33" y="0" width="18" height="8" rx="2" fill="#FFC107"/>
+        </svg>
+      </div>
+      <div class="auth-title">Créer un compte</div>
+      <div class="auth-subtitle">Inscription gratuite · Abonnement 500 DA/mois</div>
+      <div class="auth-form">
+        <input class="auth-input" id="reg-name" type="text" placeholder="Votre prénom" autocomplete="given-name">
+        <input class="auth-input" id="reg-email" type="email" placeholder="Email" autocomplete="email">
+        <input class="auth-input" id="reg-password" type="password" placeholder="Mot de passe (min. 6 caractères)" autocomplete="new-password">
+        <div class="auth-error" id="reg-error"></div>
+        <button class="btn-main" onclick="doRegister()">S'inscrire</button>
+        <button class="auth-link" onclick="showScreen('s-login')">Déjà un compte ? Se connecter</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== ÉCRAN EN ATTENTE D'ACTIVATION ===================== -->
+  <div class="screen" id="s-pending">
+    <div class="auth-body">
+      <div class="pending-icon">⏳</div>
+      <div class="auth-title">Compte en attente</div>
+      <div class="pending-msg">
+        Votre compte a été créé !<br><br>
+        Pour activer votre abonnement, envoyez <strong>500 DA</strong> par CCP ou virement, puis contactez-nous sur WhatsApp avec votre email d'inscription.
+      </div>
+      <div class="pending-contact">
+        <a class="btn-whatsapp" href="#" onclick="openWhatsApp(); return false;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Contacter sur WhatsApp
+        </a>
+      </div>
+      <div class="pending-note">Une fois votre paiement confirmé, votre accès sera activé sous 24h.</div>
+      <button class="auth-link" style="margin-top:16px;" onclick="doLogout()">Se déconnecter</button>
+    </div>
+  </div>
+
+  <!-- SPLASH -->
+  <div class="screen" id="s-splash">
+    <div class="splash-body">
+      <div class="app-icon">
+        <svg width="64" height="64" viewBox="0 0 84 70" fill="none">
+          <path d="M14 28 L18 12 Q20 6 27 6 L57 6 Q64 6 66 12 L70 28" fill="#1a1a2e"/>
+          <rect x="4" y="28" width="76" height="22" rx="8" fill="#1a1a2e"/>
+          <rect x="0" y="44" width="84" height="16" rx="6" fill="#1a1a2e"/>
+          <circle cx="16" cy="62" r="8" fill="#FFC107"/>
+          <circle cx="16" cy="62" r="3.5" fill="#1a1a2e"/>
+          <circle cx="68" cy="62" r="8" fill="#FFC107"/>
+          <circle cx="68" cy="62" r="3.5" fill="#1a1a2e"/>
+          <rect x="22" y="14" width="18" height="11" rx="3" fill="#FFC107"/>
+          <rect x="44" y="14" width="18" height="11" rx="3" fill="#FFC107"/>
+          <rect x="33" y="0" width="18" height="8" rx="2" fill="#FFC107"/>
+        </svg>
+      </div>
+      <div class="app-name">TaxiCost</div>
+    </div>
+    <div class="splash-footer">
+      <button class="btn-main" onclick="showScreen('s-welcome')">Commencer</button>
+    </div>
+  </div>
+
+  <!-- WELCOME -->
+  <div class="screen" id="s-welcome">
+    <div class="topbar">
+      <div class="topbar-logo">
+        <svg width="26" height="26" viewBox="0 0 84 70" fill="none">
+          <path d="M14 28 L18 12 Q20 6 27 6 L57 6 Q64 6 66 12 L70 28" fill="#1a1a2e"/>
+          <rect x="4" y="28" width="76" height="22" rx="8" fill="#1a1a2e"/>
+          <rect x="0" y="44" width="84" height="16" rx="6" fill="#1a1a2e"/>
+          <circle cx="16" cy="62" r="8" fill="#FFC107"/>
+          <circle cx="16" cy="62" r="3.5" fill="#1a1a2e"/>
+          <circle cx="68" cy="62" r="8" fill="#FFC107"/>
+          <circle cx="68" cy="62" r="3.5" fill="#1a1a2e"/>
+          <rect x="22" y="14" width="18" height="11" rx="3" fill="#FFC107"/>
+          <rect x="44" y="14" width="18" height="11" rx="3" fill="#FFC107"/>
+          <rect x="33" y="0" width="18" height="8" rx="2" fill="#FFC107"/>
+        </svg>
+      </div>
+      <span class="topbar-title">TaxiCost</span>
+    </div>
+    <div class="welcome-body">
+      <div class="welcome-msg" id="welcome-msg">Bonjour !<br>Quel est ton prénom ?</div>
+      <input class="name-input" id="name-input" type="text" placeholder="Ton prénom..." maxlength="20" oninput="updateName()">
+      <button class="btn-main" onclick="showMain()">Démarrer</button>
+    </div>
+  </div>
+
+  <!-- ===================== ÉCRAN 1 : COURSE ===================== -->
+  <div class="screen" id="s-main">
+    <div class="topbar">
+      <div class="topbar-logo">
+        <svg width="26" height="26" viewBox="0 0 84 70" fill="none">
+          <path d="M14 28 L18 12 Q20 6 27 6 L57 6 Q64 6 66 12 L70 28" fill="#1a1a2e"/>
+          <rect x="4" y="28" width="76" height="22" rx="8" fill="#1a1a2e"/>
+          <rect x="0" y="44" width="84" height="16" rx="6" fill="#1a1a2e"/>
+          <circle cx="16" cy="62" r="8" fill="#FFC107"/>
+          <circle cx="16" cy="62" r="3.5" fill="#1a1a2e"/>
+          <circle cx="68" cy="62" r="8" fill="#FFC107"/>
+          <circle cx="68" cy="62" r="3.5" fill="#1a1a2e"/>
+          <rect x="22" y="14" width="18" height="11" rx="3" fill="#FFC107"/>
+          <rect x="44" y="14" width="18" height="11" rx="3" fill="#FFC107"/>
+          <rect x="33" y="0" width="18" height="8" rx="2" fill="#FFC107"/>
+        </svg>
+      </div>
+      <div>
+        <div class="topbar-title">TaxiCost</div>
+        <div class="topbar-driver" id="driver-label"></div>
+      </div>
+      <button class="tarif-pill" id="tarif-pill" onclick="goTab('s-settings', null, true)">
+        <span id="tarif-pill-icon">☀️</span>
+        <span id="tarif-pill-val">20 DA</span>
+      </button>
+    </div>
+
+    <div class="main-body">
+
+      <div class="section-block">
+        <span class="section-label">Course en cours</span>
+        <div class="voice-hint" id="voice-hint">🎤 pour dicter un chiffre</div>
+      </div>
+
+      <div class="clients-stack" id="clients-list"></div>
+
+      <button class="add-btn" onclick="addClient()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        Nouveau client
+      </button>
+
+      <div class="total-box">
+        <div>
+          <div class="total-label">Total course</div>
+          <div class="total-val" id="total-val">0 DA</div>
+        </div>
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#FFC107" stroke-width="1.5" stroke-linecap="round" opacity="0.4"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      </div>
+
+      <div class="action-stack">
+        <button class="end-btn" onclick="endCourse()">✓ Terminer la course</button>
+        <button class="reset-btn" onclick="resetAll()">Annuler / Vider</button>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <button class="nav-btn active" onclick="goTab('s-main', this)">
+        <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg>
+        <span>Course</span>
+      </button>
+      <button class="nav-btn" onclick="goTab('s-stats', this)">
+        <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span>Stats</span>
+      </button>
+      <button class="nav-btn" onclick="goTab('s-history', this)">
+        <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+        <span>Historique</span>
+      </button>
+      <button class="nav-btn" onclick="goTab('s-maintenance', this)">
+        <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        <span>Entretien</span>
+      </button>
+      <button class="nav-btn" onclick="goTab('s-settings', this)">
+        <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Réglages</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===================== ÉCRAN 2 : STATS ===================== -->
+  <div class="screen" id="s-stats">
+    <div class="topbar">
+      <div class="topbar-logo">
+        <svg width="26" height="26" viewBox="0 0 84 70" fill="none">
+          <path d="M14 28 L18 12 Q20 6 27 6 L57 6 Q64 6 66 12 L70 28" fill="#1a1a2e"/>
+          <rect x="4" y="28" width="76" height="22" rx="8" fill="#1a1a2e"/>
+          <rect x="0" y="44" width="84" height="16" rx="6" fill="#1a1a2e"/>
+          <circle cx="16" cy="62" r="8" fill="#FFC107"/>
+          <circle cx="16" cy="62" r="3.5" fill="#1a1a2e"/>
+          <circle cx="68" cy="62" r="8" fill="#FFC107"/>
+          <circle cx="68" cy="62" r="3.5" fill="#1a1a2e"/>
+          <rect x="22" y="14" width="18" height="11" rx="3" fill="#FFC107"/>
+          <rect x="44" y="14" width="18" height="11" rx="3" fill="#FFC107"/>
+          <rect x="33" y="0" width="18" height="8" rx="2" fill="#FFC107"/>
+        </svg>
+      </div>
+      <div>
+        <div class="topbar-title">Statistiques</div>
+        <div class="topbar-driver" id="driver-label-stats"></div>
+      </div>
+    </div>
+
+    <div class="stats-body">
+
+      <div class="period-toggle">
+        <button class="period-btn active" id="period-day" onclick="setPeriod('day')">Jour</button>
+        <button class="period-btn" id="period-week" onclick="setPeriod('week')">Semaine</button>
+        <button class="period-btn" id="period-month" onclick="setPeriod('month')">Mois</button>
+      </div>
+      <div class="stat-date" id="stat-date"></div>
+
+      <div class="stat-big-card">
+        <div class="stat-big-label" id="stat-revenue-label">Revenu brut</div>
+        <div class="stat-big-val" id="stat-revenue">0 DA</div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-mini"><div class="stat-mini-val" id="stat-courses">0</div><div class="stat-mini-label">Courses</div></div>
+        <div class="stat-mini"><div class="stat-mini-val" id="stat-clients">0</div><div class="stat-mini-label">Clients</div></div>
+      </div>
+
+      <!-- ESSENCE -->
+      <div class="fuel-card">
+        <div class="fuel-label-group">
+          <div class="fuel-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22h12"/><path d="M4 9h10v13H4z"/><path d="M14 9h2a2 2 0 0 1 2 2v2.5l2 1.5v5.5a1.5 1.5 0 0 1-3 0"/><path d="M9 6V4a1 1 0 0 1 1-1h0a1 1 0 0 1 1 1v2"/></svg>
+          </div>
+          <div>
+            <div class="fuel-text">Essence</div>
+            <div class="fuel-sub" id="fuel-sub">Coût du jour</div>
+          </div>
+        </div>
+        <div class="fuel-input-group">
+          <input class="fuel-input" id="fuel-input" type="number" placeholder="0" min="0" oninput="onFuelChange()">
+          <span class="fuel-unit">DA</span>
+        </div>
+      </div>
+
+      <!-- NET -->
+      <div class="net-card">
+        <div>
+          <div class="net-label">Revenu net</div>
+          <div class="net-sub" id="net-sub">Brut − essence</div>
+        </div>
+        <div class="net-val" id="net-val">0 DA</div>
+      </div>
+
+      <!-- CHART -->
+      <div class="chart-card">
+        <div class="chart-title" id="chart-title">Revenus par heure</div>
+        <svg class="chart-svg" id="chart-svg" viewBox="0 0 300 140"></svg>
+      </div>
+
+      <button class="pdf-btn" onclick="exportPDF()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+        Exporter en PDF
+      </button>
+    </div>
+
+    <div class="bottom-nav">
+      <button class="nav-btn" onclick="goTab('s-main', this)">
+        <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg>
+        <span>Course</span>
+      </button>
+      <button class="nav-btn active" onclick="goTab('s-stats', this)">
+        <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span>Stats</span>
+      </button>
+      <button class="nav-btn" onclick="goTab('s-history', this)">
+        <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+        <span>Historique</span>
+      </button>
+      <button class="nav-btn" onclick="goTab('s-maintenance', this)">
+        <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        <span>Entretien</span>
+      </button>
+      <button class="nav-btn" onclick="goTab('s-settings', this)">
+        <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Réglages</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===================== ÉCRAN 3 : HISTORIQUE ===================== -->
+  <div class="screen" id="s-history">
+    <div class="topbar">
+      <div class="topbar-logo">
+        <svg width="26" height="26" viewBox="0 0 84 70" fill="none">
+          <path d="M14 28 L18 12 Q20 6 27 6 L57 6 Q64 6 66 12 L70 28" fill="#1a1a2e"/>
+          <rect x="4" y="28" width="76" height="22" rx="8" fill="#1a1a2e"/>
+          <rect x="0" y="44" width="84" height="16" rx="6" fill="#1a1a2e"/>
+          <circle cx="16" cy="62" r="8" fill="#FFC107"/>
+          <circle cx="16" cy="62" r="3.5" fill="#1a1a2e"/>
+          <circle cx="68" cy="62" r="8" fill="#FFC107"/>
+          <circle cx="68" cy="62" r="3.5" fill="#1a1a2e"/>
+          <rect x="22" y="14" width="18" height="11" rx="3" fill="#FFC107"/>
+          <rect x="44" y="14" width="18" height="11" rx="3" fill="#FFC107"/>
+          <rect x="33" y="0" width="18" height="8" rx="2" fill="#FFC107"/>
+        </svg>
+      </div>
+      <div>
+        <div class="topbar-title">Historique</div>
+        <div class="topbar-driver" id="driver-label-history"></div>
+      </div>
+    </div>
+
+    <div class="stats-body">
+      <div class="period-toggle">
+        <button class="period-btn active" id="hperiod-day" onclick="setHistoryPeriod('day')">Jour</button>
+        <button class="period-btn" id="hperiod-week" onclick="setHistoryPeriod('week')">Semaine</button>
+        <button class="period-btn" id="hperiod-month" onclick="setHistoryPeriod('month')">Mois</button>
+      </div>
+
+      <button class="undo-btn" id="undo-btn" onclick="undoLast()">↩ Annuler la dernière course</button>
+
+      <div class="history-section">
+        <div class="history-title" id="history-title">Courses du jour</div>
+        <div id="history-list"><div class="history-empty">Aucune course pour le moment</div></div>
+      </div>
+
+      <button class="clear-stats-btn" onclick="clearStats()">Réinitialiser tout l'historique</button>
+    </div>
+
+    <div class="bottom-nav">
+      <button class="nav-btn" onclick="goTab('s-main', this)">
+        <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg>
+        <span>Course</span>
+      </button>
+      <button class="nav-btn" onclick="goTab('s-stats', this)">
+        <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span>Stats</span>
+      </button>
+      <button class="nav-btn active" onclick="goTab('s-history', this)">
+        <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+        <span>Historique</span>
+      </button>
+      <button class="nav-btn" onclick="goTab('s-maintenance', this)">
+        <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        <span>Entretien</span>
+      </button>
+      <button class="nav-btn" onclick="goTab('s-settings', this)">
+        <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Réglages</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===================== ÉCRAN 4 : ENTRETIEN ===================== -->
+  <div class="screen" id="s-maintenance">
+    <div class="topbar">
+      <div class="topbar-logo">
+        <svg width="26" height="26" viewBox="0 0 84 70" fill="none">
+          <path d="M14 28 L18 12 Q20 6 27 6 L57 6 Q64 6 66 12 L70 28" fill="#1a1a2e"/>
+          <rect x="4" y="28" width="76" height="22" rx="8" fill="#1a1a2e"/>
+          <rect x="0" y="44" width="84" height="16" rx="6" fill="#1a1a2e"/>
+          <circle cx="16" cy="62" r="8" fill="#FFC107"/>
+          <circle cx="16" cy="62" r="3.5" fill="#1a1a2e"/>
+          <circle cx="68" cy="62" r="8" fill="#FFC107"/>
+          <circle cx="68" cy="62" r="3.5" fill="#1a1a2e"/>
+          <rect x="22" y="14" width="18" height="11" rx="3" fill="#FFC107"/>
+          <rect x="44" y="14" width="18" height="11" rx="3" fill="#FFC107"/>
+          <rect x="33" y="0" width="18" height="8" rx="2" fill="#FFC107"/>
+        </svg>
+      </div>
+      <div>
+        <div class="topbar-title">Entretien</div>
+        <div class="topbar-driver" id="driver-label-maint"></div>
+      </div>
+    </div>
+ 
+    <div class="stats-body">
+<button class="notif-permission-btn" id="notif-btn" onclick="requestNotificationPermission()">
+  🔔 Activer les rappels sur le téléphone
+</button>
+      <div class="maint-card" id="insurance-card">
+        <div class="maint-row">
+          <div class="maint-label-group">
+            <div class="maint-icon">🛡️</div>
+            <div>
+              <div class="maint-text">Assurance</div>
+              <div class="maint-sub" id="insurance-status">Non renseignée</div>
+            </div>
+          </div>
+        </div>
+        <div class="maint-inputs">
+          <div class="maint-field">
+            <span class="maint-field-label">Date de paiement</span>
+            <input type="date" id="insurance-date" class="maint-date-input" onchange="onMaintenanceChange()">
+          </div>
+          <div class="maint-field duration">
+  <span class="maint-field-label">Durée (mois)</span>
+  <input type="number" id="vidange-duration" class="maint-number-input" placeholder="3" min="1" onchange="onMaintenanceChange()">
+</div>
+        </div>
+      </div>
+
+      <div class="maint-card" id="vidange-card">
+        <div class="maint-row">
+          <div class="maint-label-group">
+            <div class="maint-icon">🛢️</div>
+            <div>
+              <div class="maint-text">Vidange</div>
+              <div class="maint-sub" id="vidange-status">Non renseignée</div>
+            </div>
+          </div>
+        </div>
+        <div class="maint-inputs">
+          <div class="maint-field duration">
+  <span class="maint-field-label">Durée (mois)</span>
+  <input type="number" id="vidange-duration" class="maint-number-input" placeholder="3" min="1" onchange="onMaintenanceChange()">
+</div>
+          <div class="maint-field">
+            <span class="maint-field-label">Durée (mois)</span>
+            <input type="number" id="vidange-duration" class="maint-number-input" placeholder="3" min="1" onchange="onMaintenanceChange()">
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="bottom-nav">
+      <button class="nav-btn" onclick="goTab('s-main', this)">
+        <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg>
+        <span>Course</span>
+      </button>
+      <button class="nav-btn" onclick="goTab('s-stats', this)">
+        <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span>Stats</span>
+      </button>
+      <button class="nav-btn" onclick="goTab('s-history', this)">
+        <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+        <span>Historique</span>
+      </button>
+      <button class="nav-btn active" onclick="goTab('s-maintenance', this)">
+        <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        <span>Entretien</span>
+      </button>
+      <button class="nav-btn" onclick="goTab('s-settings', this)">
+        <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Réglages</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===================== ÉCRAN 5 : RÉGLAGES ===================== -->
+  <div class="screen" id="s-settings">
+    <div class="topbar">
+      <div class="topbar-logo">
+        <svg width="26" height="26" viewBox="0 0 84 70" fill="none">
+          <path d="M14 28 L18 12 Q20 6 27 6 L57 6 Q64 6 66 12 L70 28" fill="#1a1a2e"/>
+          <rect x="4" y="28" width="76" height="22" rx="8" fill="#1a1a2e"/>
+          <rect x="0" y="44" width="84" height="16" rx="6" fill="#1a1a2e"/>
+          <circle cx="16" cy="62" r="8" fill="#FFC107"/>
+          <circle cx="16" cy="62" r="3.5" fill="#1a1a2e"/>
+          <circle cx="68" cy="62" r="8" fill="#FFC107"/>
+          <circle cx="68" cy="62" r="3.5" fill="#1a1a2e"/>
+          <rect x="22" y="14" width="18" height="11" rx="3" fill="#FFC107"/>
+          <rect x="44" y="14" width="18" height="11" rx="3" fill="#FFC107"/>
+          <rect x="33" y="0" width="18" height="8" rx="2" fill="#FFC107"/>
+        </svg>
+      </div>
+      <div>
+        <div class="topbar-title">Réglages</div>
+        <div class="topbar-driver" id="driver-label-settings"></div>
+      </div>
+    </div>
+
+    <div class="stats-body">
+
+      <!-- LANGUE -->
+      <div class="settings-card">
+        <div class="settings-card-title">Langue du micro</div>
+        <div class="lang-toggle full">
+          <button class="lang-btn active" id="lang-fr" onclick="setLang('fr')">🇫🇷 Français</button>
+          <button class="lang-btn" id="lang-ar" onclick="setLang('ar')">🇩🇿 العربية</button>
+        </div>
+      </div>
+
+      <!-- TARIF AUTO -->
+      <div class="settings-card">
+        <div class="auto-toggle-row">
+          <div>
+            <div class="auto-toggle-label">Tarif automatique</div>
+            <div class="auto-toggle-sub" id="auto-toggle-sub">Jour <span id="hours-summary-day">6h–20h</span> · Nuit <span id="hours-summary-night">20h–6h</span></div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="auto-tarif-toggle" checked onchange="onAutoToggle()">
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+
+        <div class="tarif-edit-row">
+          <div class="tarif-edit-icon day">☀️</div>
+          <div class="tarif-edit-group">
+            <div class="tarif-edit-label">Tarif jour</div>
+            <div class="tarif-edit-sub">Montant fixe</div>
+          </div>
+          <div class="tarif-edit-input-group">
+            <input class="tarif-edit-input" id="tarif-day-input" type="number" value="20" min="0" oninput="onTarifSettingsChange()">
+            <span class="tarif-edit-unit">DA</span>
+          </div>
+        </div>
+
+        <div class="tarif-edit-row">
+          <div class="tarif-edit-icon night">🌙</div>
+          <div class="tarif-edit-group">
+            <div class="tarif-edit-label">Tarif nuit</div>
+            <div class="tarif-edit-sub">Montant fixe</div>
+          </div>
+          <div class="tarif-edit-input-group">
+            <input class="tarif-edit-input" id="tarif-night-input" type="number" value="30" min="0" oninput="onTarifSettingsChange()">
+            <span class="tarif-edit-unit">DA</span>
+          </div>
+        </div>
+
+        <div class="hours-edit-row">
+          <div class="hours-edit-field">
+            <span class="hours-edit-label">Début nuit</span>
+            <input class="hours-edit-input" id="night-start-input" type="number" value="20" min="0" max="23" oninput="onHoursSettingsChange()">
+            <span class="hours-edit-unit">h</span>
+          </div>
+          <div class="hours-edit-field">
+            <span class="hours-edit-label">Fin nuit</span>
+            <input class="hours-edit-input" id="night-end-input" type="number" value="6" min="0" max="23" oninput="onHoursSettingsChange()">
+            <span class="hours-edit-unit">h</span>
+          </div>
+        </div>
+
+        <div class="manual-active-note" id="manual-active-note" style="display:none;">
+          Mode manuel actif — choisis le tarif à utiliser pour la course en cours :
+          <div class="manual-pick-row">
+            <button class="manual-pick-btn" id="pick-day" onclick="pickManualTarif('day')">☀️ Jour</button>
+            <button class="manual-pick-btn" id="pick-night" onclick="pickManualTarif('night')">🌙 Nuit</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="bottom-nav">
+      <button class="nav-btn" onclick="goTab('s-main', this)">
+        <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg>
+        <span>Course</span>
+      </button>
+      <button class="nav-btn" onclick="goTab('s-stats', this)">
+        <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span>Stats</span>
+      </button>
+      <button class="nav-btn" onclick="goTab('s-history', this)">
+        <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+        <span>Historique</span>
+      </button>
+      <button class="nav-btn" onclick="goTab('s-maintenance', this)">
+        <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        <span>Entretien</span>
+      </button>
+      <button class="nav-btn active" onclick="goTab('s-settings', this)">
+        <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Réglages</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <!-- Firebase SDK (compat version — fonctionne sans bundler) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
