@@ -35,7 +35,7 @@ function doLogin() {
     });
 }
 
-// ----- Inscription -----
+// ----- Inscription avec essai gratuit 3 jours -----
 function doRegister() {
   var name = document.getElementById('reg-name').value.trim();
   var email = document.getElementById('reg-email').value.trim();
@@ -45,12 +45,18 @@ function doRegister() {
   if (!name || !email || !pwd) { errEl.textContent = 'Remplis tous les champs'; return; }
   if (pwd.length < 6) { errEl.textContent = 'Mot de passe trop court (min. 6 caractères)'; return; }
 
+  // Date d'expiration = maintenant + 3 jours
+  var trialEnd = new Date();
+  trialEnd.setDate(trialEnd.getDate() + 3);
+
   auth.createUserWithEmailAndPassword(email, pwd)
     .then(function(cred) {
       return db.collection('users').doc(cred.user.uid).set({
         name: name,
         email: email,
         actif: false,
+        trial: true,
+        trialEnd: trialEnd.toISOString(),
         dateInscription: new Date().toISOString()
       });
     })
@@ -73,8 +79,7 @@ function openWhatsApp() {
   var user = auth.currentUser;
   var email = user ? user.email : '';
   var msg = encodeURIComponent(
-    'Bonjour, je viens de créer mon compte TaxiCost avec l\'email : ' +
-    email + '. Je souhaite activer mon abonnement (' + PRIX_ABONNEMENT + ').'
+    'Bonjour, je souhaite activer mon abonnement TaxiCost (' + PRIX_ABONNEMENT + ').\nMon email : ' + email
   );
   window.open('https://wa.me/' + WHATSAPP_NUMBER + '?text=' + msg, '_blank');
 }
@@ -87,21 +92,52 @@ auth.onAuthStateChanged(function(user) {
   }
   db.collection('users').doc(user.uid).get()
     .then(function(doc) {
-      if (doc.exists && doc.data().actif === true) {
-        var name = doc.data().name || 'Chauffeur';
-        localStorage.setItem('taxicost_driver', name);
-        setDriverLabels(name);
-        if (clients.length === 0) addClient();
-        showScreen('s-splash');
-        setTimeout(function(){ showScreen('s-main'); }, 1800);
-      } else {
-        showScreen('s-pending');
+      if (!doc.exists) { showScreen('s-pending'); return; }
+      var data = doc.data();
+      var name = data.name || 'Chauffeur';
+
+      // 1. Abonnement payant actif
+      if (data.actif === true) {
+        enterApp(name);
+        return;
       }
+
+      // 2. Essai gratuit encore valide
+      if (data.trial === true && data.trialEnd) {
+        var trialEnd = new Date(data.trialEnd);
+        var now = new Date();
+        var daysLeft = Math.ceil((trialEnd - now) / 86400000);
+        if (daysLeft > 0) {
+          enterApp(name, daysLeft);
+          return;
+        }
+        // Essai expiré → écran abonnement
+        showScreen('s-expired');
+        return;
+      }
+
+      // 3. Pas actif, pas d'essai → en attente
+      showScreen('s-pending');
     })
     .catch(function() {
       showScreen('s-pending');
     });
 });
+
+function enterApp(name, trialDaysLeft) {
+  localStorage.setItem('taxicost_driver', name);
+  setDriverLabels(name);
+  if (clients.length === 0) addClient();
+  showScreen('s-splash');
+  setTimeout(function(){
+    showScreen('s-main');
+    if (trialDaysLeft !== undefined) {
+      setTimeout(function(){
+        showToast('🎁 Essai gratuit — ' + trialDaysLeft + ' jour' + (trialDaysLeft > 1 ? 's' : '') + ' restant' + (trialDaysLeft > 1 ? 's' : ''));
+      }, 500);
+    }
+  }, 1800);
+}
 
 // ===========================================================
 var clients = [];
