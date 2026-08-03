@@ -13,29 +13,23 @@ firebase.initializeApp(firebaseConfig);
 var db = firebase.firestore();
 var auth = firebase.auth();
 
-// Ton numéro WhatsApp (format international sans le +)
 var WHATSAPP_NUMBER = '213793270749'; // ← REMPLACE PAR TON VRAI NUMÉRO ex: 213770123456
 var PRIX_ABONNEMENT = '500 DA';
 
-// ----- Connexion -----
 function doLogin() {
   var email = document.getElementById('login-email').value.trim();
   var pwd = document.getElementById('login-password').value;
   var errEl = document.getElementById('login-error');
   errEl.textContent = '';
   if (!email || !pwd) { errEl.textContent = 'Remplis tous les champs'; return; }
-
   auth.signInWithEmailAndPassword(email, pwd)
     .catch(function(e) {
       if (e.code === 'auth/wrong-password' || e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') {
         errEl.textContent = 'Email ou mot de passe incorrect';
-      } else {
-        errEl.textContent = 'Erreur : ' + e.message;
-      }
+      } else { errEl.textContent = 'Erreur : ' + e.message; }
     });
 }
 
-// ----- Inscription avec essai gratuit 3 jours -----
 function doRegister() {
   var name = document.getElementById('reg-name').value.trim();
   var email = document.getElementById('reg-email').value.trim();
@@ -45,98 +39,90 @@ function doRegister() {
   if (!name || !email || !pwd) { errEl.textContent = 'Remplis tous les champs'; return; }
   if (pwd.length < 6) { errEl.textContent = 'Mot de passe trop court (min. 6 caractères)'; return; }
 
-  // Date d'expiration = maintenant + 3 jours
   var trialEnd = new Date();
   trialEnd.setDate(trialEnd.getDate() + 3);
 
   auth.createUserWithEmailAndPassword(email, pwd)
     .then(function(cred) {
       return db.collection('users').doc(cred.user.uid).set({
-        name: name,
-        email: email,
-        actif: false,
-        trial: true,
-        trialEnd: trialEnd.toISOString(),
-        dateInscription: new Date().toISOString()
+        name: name, email: email, actif: false, trial: true,
+        trialEnd: trialEnd.toISOString(), dateInscription: new Date().toISOString()
       });
     })
     .catch(function(e) {
-      if (e.code === 'auth/email-already-in-use') {
-        errEl.textContent = 'Cet email est déjà utilisé';
-      } else {
-        errEl.textContent = 'Erreur : ' + e.message;
-      }
+      if (e.code === 'auth/email-already-in-use') errEl.textContent = 'Cet email est déjà utilisé';
+      else errEl.textContent = 'Erreur : ' + e.message;
     });
 }
 
-// ----- Déconnexion -----
-function doLogout() {
-  auth.signOut();
-}
+function doLogout() { auth.signOut(); }
 
-// ----- WhatsApp -----
 function openWhatsApp() {
   var user = auth.currentUser;
   var email = user ? user.email : '';
-  var msg = encodeURIComponent(
-    'Bonjour, je souhaite activer mon abonnement TaxiCost (' + PRIX_ABONNEMENT + ').\nMon email : ' + email
-  );
+  var msg = encodeURIComponent('Bonjour, je souhaite activer mon abonnement TaxiCost (' + PRIX_ABONNEMENT + ').\nMon email : ' + email);
   window.open('https://wa.me/' + WHATSAPP_NUMBER + '?text=' + msg, '_blank');
 }
 
-// ----- Écoute le statut d'authentification en temps réel -----
 auth.onAuthStateChanged(function(user) {
-  if (!user) {
-    showScreen('s-login');
-    return;
-  }
+  if (!user) { showScreen('s-login'); return; }
   db.collection('users').doc(user.uid).get()
     .then(function(doc) {
       if (!doc.exists) { showScreen('s-pending'); return; }
       var data = doc.data();
       var name = data.name || 'Chauffeur';
 
-      // 1. Abonnement payant actif
-      if (data.actif === true) {
-        enterApp(name);
-        return;
-      }
+      if (data.actif === true) { enterApp(name); return; }
 
-      // 2. Essai gratuit encore valide
       if (data.trial === true && data.trialEnd) {
         var trialEnd = new Date(data.trialEnd);
-        var now = new Date();
-        var daysLeft = Math.ceil((trialEnd - now) / 86400000);
-        if (daysLeft > 0) {
-          enterApp(name, daysLeft);
-          return;
-        }
-        // Essai expiré → écran abonnement
-        showScreen('s-expired');
-        return;
+        var daysLeft = Math.ceil((trialEnd - new Date()) / 86400000);
+        if (daysLeft > 0) { enterApp(name, daysLeft); return; }
+        showScreen('s-expired'); return;
       }
-
-      // 3. Pas actif, pas d'essai → en attente
       showScreen('s-pending');
     })
-    .catch(function() {
-      showScreen('s-pending');
-    });
+    .catch(function() { showScreen('s-pending'); });
 });
 
 function enterApp(name, trialDaysLeft) {
   localStorage.setItem('taxicost_driver', name);
+  if (trialDaysLeft !== undefined) {
+    localStorage.setItem('taxicost_trial_days', trialDaysLeft);
+  } else {
+    localStorage.removeItem('taxicost_trial_days');
+  }
   setDriverLabels(name);
   if (clients.length === 0) addClient();
+  updateTrialBars(trialDaysLeft);
   showScreen('s-splash');
-  setTimeout(function(){
-    showScreen('s-main');
-    if (trialDaysLeft !== undefined) {
-      setTimeout(function(){
-        showToast('🎁 Essai gratuit — ' + trialDaysLeft + ' jour' + (trialDaysLeft > 1 ? 's' : '') + ' restant' + (trialDaysLeft > 1 ? 's' : ''));
-      }, 500);
+  setTimeout(function(){ showScreen('s-main'); }, 1800);
+}
+
+function updateTrialBars(trialDaysLeft) {
+  var screens = ['main', 'stats', 'history', 'maint', 'settings'];
+  if (trialDaysLeft === undefined) {
+    var stored = parseInt(localStorage.getItem('taxicost_trial_days'));
+    trialDaysLeft = isNaN(stored) ? undefined : stored;
+  }
+  screens.forEach(function(s) {
+    var bar  = document.getElementById('trial-bar-'  + s);
+    var fill = document.getElementById('trial-fill-' + s);
+    var days = document.getElementById('trial-days-' + s);
+    if (!bar || !fill || !days) return;
+
+    if (trialDaysLeft !== undefined && trialDaysLeft > 0) {
+      var pct    = Math.min(100, Math.round((trialDaysLeft / 3) * 100));
+      var urgent = trialDaysLeft <= 1;
+      bar.style.display = 'flex';
+      fill.style.width  = pct + '%';
+      fill.className    = 'trial-bar-fill' + (urgent ? ' urgent' : '');
+      days.textContent  = trialDaysLeft + ' jour' + (trialDaysLeft > 1 ? 's' : '') + ' restant' + (trialDaysLeft > 1 ? 's' : '');
+      days.className    = 'trial-bar-days' + (urgent ? ' urgent' : '');
+    } else {
+      bar.style.display = 'none';
     }
-  }, 1800);
+  });
 }
 
 // ===========================================================
@@ -144,8 +130,8 @@ var clients = [];
 var cid = 0;
 var currentLang = 'fr-FR';
 var activeRecognition = null;
-var currentPeriod = 'day';      // période pour l'onglet Stats
-var currentHistoryPeriod = 'day'; // période pour l'onglet Historique
+var currentPeriod = 'day';
+var currentHistoryPeriod = 'day';
 
 // ===========================================================
 // ===== NAVIGATION (5 onglets) =====
@@ -1211,10 +1197,12 @@ if ('serviceWorker' in navigator) {
 
 // ===== INIT =====
 (function init() {
-  // Le nom du chauffeur est chargé depuis Firebase via onAuthStateChanged
-  // On garde juste le fallback si déjà en cache
   var savedDriver = localStorage.getItem('taxicost_driver');
-  if (savedDriver) setDriverLabels(savedDriver);
+  if (savedDriver) {
+    document.getElementById('name-input').value = savedDriver;
+    updateName();
+    setDriverLabels(savedDriver);
+  }
 
   var savedLang = localStorage.getItem('taxicost_lang') || 'fr';
   setLang(savedLang);
