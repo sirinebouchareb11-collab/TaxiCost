@@ -422,63 +422,6 @@ html, body {
 }
 .toast.show { opacity: 1; }
 
-/* ===== AUTH SCREENS ===== */
-.auth-body {
-  flex: 1; display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  padding: 40px 28px; gap: 14px; overflow-y: auto;
-}
-.auth-logo {
-  width: 88px; height: 88px; background: var(--yellow);
-  border-radius: 24px; display: flex; align-items: center;
-  justify-content: center; margin-bottom: 6px;
-  box-shadow: 0 8px 24px rgba(255,193,7,0.3);
-}
-.auth-title {
-  font-size: 26px; font-weight: 700; color: var(--text); text-align: center;
-}
-.auth-subtitle {
-  font-size: 13px; color: var(--text-muted); text-align: center; line-height: 1.5;
-}
-.auth-form {
-  width: 100%; display: flex; flex-direction: column; gap: 12px; margin-top: 8px;
-}
-.auth-input {
-  width: 100%; font-size: 15px; padding: 15px 18px;
-  border-radius: 14px; border: 1.5px solid var(--border);
-  color: var(--text); outline: none; background: var(--soft);
-  transition: border-color .2s;
-}
-.auth-input:focus { border-color: var(--yellow); }
-.auth-error {
-  font-size: 12px; color: #dc2626; min-height: 16px;
-  text-align: center; font-weight: 500;
-}
-.auth-link {
-  width: 100%; background: none; border: none; color: var(--text-muted);
-  font-size: 13px; cursor: pointer; padding: 8px; text-align: center;
-}
-.auth-link:active { opacity: 0.7; }
-
-/* PENDING */
-.pending-icon { font-size: 56px; margin-bottom: 4px; }
-.pending-msg {
-  font-size: 14px; color: var(--text); text-align: center;
-  line-height: 1.7; background: var(--soft); border-radius: 14px; padding: 18px 20px;
-  width: 100%;
-}
-.pending-contact { width: 100%; margin-top: 4px; }
-.btn-whatsapp {
-  width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
-  background: #25D366; color: #fff; font-size: 15px; font-weight: 700;
-  padding: 16px; border-radius: 14px; text-decoration: none; cursor: pointer;
-}
-.btn-whatsapp:active { opacity: 0.85; }
-.pending-note {
-  font-size: 12px; color: var(--text-muted); text-align: center;
-  line-height: 1.6; padding: 0 8px;
-}
-
 .notif-permission-btn {
   width: 100%; background: var(--soft); color: var(--text);
   font-size: 13px; font-weight: 700; padding: 14px;
