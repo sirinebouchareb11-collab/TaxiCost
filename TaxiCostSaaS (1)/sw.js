@@ -1,4 +1,4 @@
-var CACHE = 'taxicost-v8';
+var CACHE = 'taxicost-v9';
 var FILES = [
   '/',
   '/index.html',
