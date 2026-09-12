@@ -456,9 +456,10 @@
     </div>
  
     <div class="stats-body">
-<button class="notif-permission-btn" id="notif-btn" onclick="requestNotificationPermission()">
-  🔔 Activer les rappels sur le téléphone
-</button>
+      <button class="notif-permission-btn" id="notif-btn" onclick="requestNotificationPermission()">
+        🔔 Activer les rappels sur le téléphone
+      </button>
+
       <div class="maint-card" id="insurance-card">
         <div class="maint-row">
           <div class="maint-label-group">
@@ -475,9 +476,9 @@
             <input type="date" id="insurance-date" class="maint-date-input" onchange="onMaintenanceChange()">
           </div>
           <div class="maint-field duration">
-  <span class="maint-field-label">Durée (mois)</span>
-  <input type="number" id="vidange-duration" class="maint-number-input" placeholder="3" min="1" onchange="onMaintenanceChange()">
-</div>
+            <span class="maint-field-label">Durée (mois)</span>
+            <input type="number" id="insurance-duration" class="maint-number-input" placeholder="12" min="1" onchange="onMaintenanceChange()">
+          </div>
         </div>
       </div>
 
@@ -492,11 +493,11 @@
           </div>
         </div>
         <div class="maint-inputs">
-          <div class="maint-field duration">
-  <span class="maint-field-label">Durée (mois)</span>
-  <input type="number" id="vidange-duration" class="maint-number-input" placeholder="3" min="1" onchange="onMaintenanceChange()">
-</div>
           <div class="maint-field">
+            <span class="maint-field-label">Date de la vidange</span>
+            <input type="date" id="vidange-date" class="maint-date-input" onchange="onMaintenanceChange()">
+          </div>
+          <div class="maint-field duration">
             <span class="maint-field-label">Durée (mois)</span>
             <input type="number" id="vidange-duration" class="maint-number-input" placeholder="3" min="1" onchange="onMaintenanceChange()">
           </div>
