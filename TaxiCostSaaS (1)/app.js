@@ -34,6 +34,7 @@ function doRegister() {
   var pwd = document.getElementById('reg-password').value;
   var errEl = document.getElementById('reg-error');
   errEl.textContent = '';
+  errEl.style.color = '';
   if (!name || !email || !pwd) { errEl.textContent = 'Remplis tous les champs'; return; }
   if (pwd.length < 6) { errEl.textContent = 'Mot de passe trop court (min. 6 caractères)'; return; }
 
@@ -54,6 +55,12 @@ function doRegister() {
     }
     // Si "Confirm email" est désactivé dans Supabase, une session est créée immédiatement
     // et onAuthStateChange ci-dessous prend le relais automatiquement.
+    if (res.data && res.data.session) {
+      return;
+    }
+    // Sinon, la confirmation par email est requise : on informe clairement l'utilisateur
+    errEl.style.color = '#16a34a';
+    errEl.textContent = 'Compte créé ! Vérifie ton email (et les spams), clique sur le lien de confirmation, puis reviens te connecter.';
   });
 }
 
