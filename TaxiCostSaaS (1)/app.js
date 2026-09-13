@@ -1,17 +1,11 @@
 // ===========================================================
-// ===== FIREBASE — CONFIG & AUTH =====
+// ===== SUPABASE — CONFIG & AUTH =====
 // ===========================================================
-var firebaseConfig = {
-  apiKey: "AIzaSyCp_oczsA7oBYk5ESIZA-UidY46l_hQTJo",
-  authDomain: "taxicost-3d79a.firebaseapp.com",
-  projectId: "taxicost-3d79a",
-  storageBucket: "taxicost-3d79a.firebasestorage.app",
-  messagingSenderId: "1062145846303",
-  appId: "1:1062145846303:web:a009d54ab90067621bf92a"
-};
-firebase.initializeApp(firebaseConfig);
-var db = firebase.firestore();
-var auth = firebase.auth();
+var SUPABASE_URL = 'https://idqhakkbqdmysfgbyzwb.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlkcWhha2ticWRteXNmZ2J5endiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyNDk2NTMsImV4cCI6MjEwNDgyNTY1M30.MADG5VX49WNFkI4KBj8-lCnPjAAOcFhN_iJUj7fITsU';
+
+// 'supabase' est le nom global fourni par le script CDN — on nomme notre client différemment pour éviter tout conflit
+var supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Ton numéro WhatsApp (format international sans le +)
 var WHATSAPP_NUMBER = '213793270749'; // ← REMPLACE PAR TON VRAI NUMÉRO ex: 213770123456
@@ -25,12 +19,10 @@ function doLogin() {
   errEl.textContent = '';
   if (!email || !pwd) { errEl.textContent = 'Remplis tous les champs'; return; }
 
-  auth.signInWithEmailAndPassword(email, pwd)
-    .catch(function(e) {
-      if (e.code === 'auth/wrong-password' || e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') {
+  supabaseClient.auth.signInWithPassword({ email: email, password: pwd })
+    .then(function(res) {
+      if (res.error) {
         errEl.textContent = 'Email ou mot de passe incorrect';
-      } else {
-        errEl.textContent = 'Erreur : ' + e.message;
       }
     });
 }
@@ -45,35 +37,27 @@ function doRegister() {
   if (!name || !email || !pwd) { errEl.textContent = 'Remplis tous les champs'; return; }
   if (pwd.length < 6) { errEl.textContent = 'Mot de passe trop court (min. 6 caractères)'; return; }
 
-  // Date d'expiration = maintenant + 3 jours
-  var trialEnd = new Date();
-  trialEnd.setDate(trialEnd.getDate() + 3);
-
-  auth.createUserWithEmailAndPassword(email, pwd)
-    .then(function(cred) {
-      return db.collection('users').doc(cred.user.uid).set({
-        name: name,
-        email: email,
-        actif: false,
-        trial: true,
-        trialEnd: trialEnd.toISOString(),
-        dateInscription: new Date().toISOString()
-      });
-    })
-    .catch(function(e) {
-      if (e.code === 'auth/email-already-in-use') {
+  // Le trigger SQL "on_auth_user_created" crée automatiquement la ligne subscriptions
+  // (avec trial_end = now() + 3 jours) à partir de raw_user_meta_data.name
+  supabaseClient.auth.signUp({
+    email: email,
+    password: pwd,
+    options: { data: { name: name } }
+  }).then(function(res) {
+    if (res.error) {
+      if (res.error.message && res.error.message.toLowerCase().indexOf('already registered') !== -1) {
         errEl.textContent = 'Cet email est déjà utilisé';
       } else {
-        errEl.textContent = 'Erreur : ' + e.message;
+        errEl.textContent = 'Erreur : ' + res.error.message;
       }
-    });
+      return;
+    }
+    // Si "Confirm email" est désactivé dans Supabase, une session est créée immédiatement
+    // et onAuthStateChange ci-dessous prend le relais automatiquement.
+  });
 }
 
-// ----- Déconnexion -----
-function doLogout() {
-  auth.signOut();
-}
-
+// ----- Mot de passe oublié -----
 function doForgotPassword() {
   var email = document.getElementById('forgot-email').value.trim();
   var errEl = document.getElementById('forgot-error');
@@ -82,54 +66,61 @@ function doForgotPassword() {
 
   if (!email) { errEl.style.color = '#dc2626'; errEl.textContent = 'Entre ton email'; return; }
 
-  auth.sendPasswordResetEmail(email)
-    .then(function() {
-      errEl.style.color = '#16a34a';
-      errEl.textContent = 'Email envoyé ! Vérifie ta boîte de réception (et les spams).';
-    })
-    .catch(function(e) {
-      errEl.style.color = '#dc2626';
-      if (e.code === 'auth/user-not-found') {
-        errEl.textContent = 'Aucun compte avec cet email';
-      } else if (e.code === 'auth/invalid-email') {
-        errEl.textContent = 'Email invalide';
+  supabaseClient.auth.resetPasswordForEmail(email)
+    .then(function(res) {
+      if (res.error) {
+        errEl.style.color = '#dc2626';
+        errEl.textContent = 'Erreur : ' + res.error.message;
       } else {
-        errEl.textContent = 'Erreur : ' + e.message;
+        errEl.style.color = '#16a34a';
+        errEl.textContent = 'Email envoyé ! Vérifie ta boîte de réception (et les spams).';
       }
     });
 }
 
+// ----- Déconnexion -----
+function doLogout() {
+  supabaseClient.auth.signOut();
+}
+
 // ----- WhatsApp -----
 function openWhatsApp() {
-  var user = auth.currentUser;
-  var email = user ? user.email : '';
-  var msg = encodeURIComponent(
-    'Bonjour, je souhaite activer mon abonnement TaxiCost (' + PRIX_ABONNEMENT + ').\nMon email : ' + email
-  );
-  window.open('https://wa.me/' + WHATSAPP_NUMBER + '?text=' + msg, '_blank');
+  supabaseClient.auth.getUser().then(function(res) {
+    var email = (res.data && res.data.user) ? res.data.user.email : '';
+    var msg = encodeURIComponent(
+      'Bonjour, je souhaite activer mon abonnement TaxiCost (' + PRIX_ABONNEMENT + ').\nMon email : ' + email
+    );
+    window.open('https://wa.me/' + WHATSAPP_NUMBER + '?text=' + msg, '_blank');
+  });
 }
 
 // ----- Écoute le statut d'authentification en temps réel -----
-auth.onAuthStateChanged(function(user) {
-  if (!user) {
+supabaseClient.auth.onAuthStateChange(function(event, session) {
+  if (!session) {
     showScreen('s-login');
     return;
   }
-  db.collection('users').doc(user.uid).get()
-    .then(function(doc) {
-      if (!doc.exists) { showScreen('s-pending'); return; }
-      var data = doc.data();
+  var user = session.user;
+
+  supabaseClient
+    .from('subscriptions')
+    .select('*')
+    .eq('user_id', user.id)
+    .single()
+    .then(function(res) {
+      if (res.error || !res.data) { showScreen('s-pending'); return; }
+      var data = res.data;
       var name = data.name || 'Chauffeur';
 
       // 1. Abonnement payant actif
-      if (data.actif === true) {
+      if (data.status === 'active') {
         enterApp(name);
         return;
       }
 
       // 2. Essai gratuit encore valide
-      if (data.trial === true && data.trialEnd) {
-        var trialEnd = new Date(data.trialEnd);
+      if (data.status === 'trial' && data.trial_end) {
+        var trialEnd = new Date(data.trial_end);
         var now = new Date();
         var daysLeft = Math.ceil((trialEnd - now) / 86400000);
         if (daysLeft > 0) {
@@ -142,9 +133,6 @@ auth.onAuthStateChanged(function(user) {
       }
 
       // 3. Pas actif, pas d'essai → en attente
-      showScreen('s-pending');
-    })
-    .catch(function() {
       showScreen('s-pending');
     });
 });
@@ -1262,7 +1250,7 @@ if ('serviceWorker' in navigator) {
 
 // ===== INIT =====
 (function init() {
-  // Le nom du chauffeur est chargé depuis Firebase via onAuthStateChanged
+  // Le nom du chauffeur est chargé depuis Supabase via onAuthStateChange
   // On garde juste le fallback si déjà en cache
   var savedDriver = localStorage.getItem('taxicost_driver');
   if (savedDriver) setDriverLabels(savedDriver);
