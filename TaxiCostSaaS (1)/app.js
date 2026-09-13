@@ -87,6 +87,8 @@ function doForgotPassword() {
 
 // ----- Déconnexion -----
 function doLogout() {
+  appData = { courses: [], fuel: {}, maintenance: {}, settings: {} };
+  clients = []; cid = 0;
   supabaseClient.auth.signOut();
 }
 
@@ -189,18 +191,49 @@ supabaseClient.auth.onAuthStateChange(function(event, session) {
 });
 
 function enterApp(name, trialDaysLeft) {
-  localStorage.setItem('taxicost_driver', name);
+  supabaseClient.auth.getUser().then(function(res) {
+    var user = res.data && res.data.user;
+    if (!user) return;
+    supabaseClient.from('app_data').select('*').eq('user_id', user.id).single().then(function(res2) {
+      if (res2.data) {
+        appData.courses = res2.data.courses || [];
+        appData.fuel = res2.data.fuel || {};
+        appData.maintenance = res2.data.maintenance || {};
+        appData.settings = res2.data.settings || {};
+      }
+      finishEnterApp(name, trialDaysLeft);
+    });
+  });
+}
+
+function finishEnterApp(name, trialDaysLeft) {
   if (trialDaysLeft !== undefined && trialDaysLeft > 0) {
     localStorage.setItem('taxicost_trial_days', trialDaysLeft);
   } else {
     localStorage.removeItem('taxicost_trial_days');
   }
   setDriverLabels(name);
+
+  // Applique la langue et les tarifs synchronisés
+  setLang(appData.settings.lang || 'fr');
+  if (!isAutoMode()) {
+    manualOverride = isNightTime() ? 'night' : 'day';
+  }
+  updateTarifPill();
+
   if (clients.length === 0) addClient();
+  render();
   showScreen('s-splash');
   setTimeout(function(){
     showScreen('s-main');
     updateTrialBars(trialDaysLeft);
+    updateNotifButton();
+    setTimeout(function() {
+      checkMaintenanceAlerts();
+      if ('Notification' in window && Notification.permission === 'granted') {
+        scheduleMaintenanceChecks();
+      }
+    }, 1500);
   }, 1800);
 }
 
@@ -227,6 +260,31 @@ function updateTrialBars(trialDaysLeft) {
       bar.style.display = 'none';
     }
   });
+}
+
+// ===========================================================
+// ===== DONNÉES APP (historique, réglages, entretien) — synchronisées via Supabase =====
+// ===========================================================
+var appData = { courses: [], fuel: {}, maintenance: {}, settings: {} };
+var persistTimeoutId = null;
+
+function persistAppData() {
+  if (persistTimeoutId) clearTimeout(persistTimeoutId);
+  persistTimeoutId = setTimeout(function() {
+    supabaseClient.auth.getUser().then(function(res) {
+      var user = res.data && res.data.user;
+      if (!user) return;
+      supabaseClient.from('app_data').update({
+        courses: appData.courses,
+        fuel: appData.fuel,
+        maintenance: appData.maintenance,
+        settings: appData.settings,
+        updated_at: new Date().toISOString()
+      }).eq('user_id', user.id).then(function(res2) {
+        if (res2.error) console.error('Erreur de sauvegarde des données:', res2.error);
+      });
+    });
+  }, 500);
 }
 
 // ===========================================================
@@ -276,7 +334,8 @@ function goTab(id, btn, fromPill) {
 // ===== LANGUE =====
 function setLang(lang) {
   currentLang = lang === 'ar' ? 'ar-DZ' : 'fr-FR';
-  localStorage.setItem('taxicost_lang', lang);
+  appData.settings.lang = lang;
+  persistAppData();
   document.getElementById('lang-fr').className = 'lang-btn' + (lang === 'fr' ? ' active' : '');
   document.getElementById('lang-ar').className = 'lang-btn' + (lang === 'ar' ? ' active' : '');
   var hint = document.getElementById('voice-hint');
@@ -295,7 +354,9 @@ function showMain() {
   if (clients.length === 0) addClient();
   showScreen('s-main');
 }
+var currentDriverName = 'Chauffeur';
 function setDriverLabels(name) {
+  currentDriverName = name || 'Chauffeur';
   ['driver-label','driver-label-stats','driver-label-history','driver-label-maint','driver-label-settings'].forEach(function(id){
     var el = document.getElementById(id);
     if (el) el.textContent = name;
@@ -308,24 +369,24 @@ function setDriverLabels(name) {
 var manualOverride = null; // null = auto, 'day' ou 'night' = forcé manuellement
 
 function loadTarifDay() {
-  var v = parseFloat(localStorage.getItem('taxicost_tarif_day'));
+  var v = parseFloat(appData.settings.tarifDay);
   return isNaN(v) ? 20 : v;
 }
 function loadTarifNight() {
-  var v = parseFloat(localStorage.getItem('taxicost_tarif_night'));
+  var v = parseFloat(appData.settings.tarifNight);
   return isNaN(v) ? 30 : v;
 }
 function loadNightStart() {
-  var v = parseInt(localStorage.getItem('taxicost_night_start'));
+  var v = parseInt(appData.settings.nightStart);
   return isNaN(v) ? 20 : v;
 }
 function loadNightEnd() {
-  var v = parseInt(localStorage.getItem('taxicost_night_end'));
+  var v = parseInt(appData.settings.nightEnd);
   return isNaN(v) ? 6 : v;
 }
 function isAutoMode() {
-  var v = localStorage.getItem('taxicost_tarif_auto');
-  return v === null ? true : v === 'true';
+  var v = appData.settings.tarifAuto;
+  return v === undefined ? true : v === true;
 }
 function isNightTime() {
   var h = new Date().getHours();
@@ -373,7 +434,7 @@ function loadSettingsIntoInputs() {
   updateHoursSummary();
   toggleManualNote();
 
-  var savedLang = localStorage.getItem('taxicost_lang') || 'fr';
+  var savedLang = appData.settings.lang || 'fr';
   document.getElementById('lang-fr').className = 'lang-btn' + (savedLang === 'fr' ? ' active' : '');
   document.getElementById('lang-ar').className = 'lang-btn' + (savedLang === 'ar' ? ' active' : '');
 }
@@ -390,7 +451,8 @@ function updateHoursSummary() {
 
 function onAutoToggle() {
   var auto = document.getElementById('auto-tarif-toggle').checked;
-  localStorage.setItem('taxicost_tarif_auto', auto);
+  appData.settings.tarifAuto = auto;
+  persistAppData();
   if (auto) manualOverride = null;
   else if (manualOverride === null) manualOverride = isNightTime() ? 'night' : 'day';
   toggleManualNote();
@@ -415,8 +477,9 @@ function pickManualTarif(mode) {
 function onTarifSettingsChange() {
   var dayVal = parseFloat(document.getElementById('tarif-day-input').value) || 0;
   var nightVal = parseFloat(document.getElementById('tarif-night-input').value) || 0;
-  localStorage.setItem('taxicost_tarif_day', dayVal);
-  localStorage.setItem('taxicost_tarif_night', nightVal);
+  appData.settings.tarifDay = dayVal;
+  appData.settings.tarifNight = nightVal;
+  persistAppData();
   recalcAll();
   updateTarifPill();
 }
@@ -427,8 +490,9 @@ function onHoursSettingsChange() {
   if (isNaN(end)) end = 6;
   start = Math.max(0, Math.min(23, start));
   end = Math.max(0, Math.min(23, end));
-  localStorage.setItem('taxicost_night_start', start);
-  localStorage.setItem('taxicost_night_end', end);
+  appData.settings.nightStart = start;
+  appData.settings.nightEnd = end;
+  persistAppData();
   updateHoursSummary();
   recalcAll();
   updateTarifPill();
@@ -714,11 +778,11 @@ function resetAll() {
 // ===== COURSES (historique) =====
 // ===========================================================
 function loadCourses() {
-  var raw = localStorage.getItem('taxicost_courses');
-  return raw ? JSON.parse(raw) : [];
+  return appData.courses || [];
 }
 function saveCourses(arr) {
-  localStorage.setItem('taxicost_courses', JSON.stringify(arr));
+  appData.courses = arr;
+  persistAppData();
 }
 
 function endCourse() {
@@ -769,7 +833,8 @@ function undoLast() {
 
 function clearStats() {
   if (confirm("Effacer tout l'historique des courses ? Cette action est irréversible.")) {
-    localStorage.removeItem('taxicost_courses');
+    appData.courses = [];
+    persistAppData();
     renderHistory();
   }
 }
@@ -798,7 +863,7 @@ function exportPDF() {
   filtered.forEach(function(c){ totalRevenue += c.total; totalClients += c.nbClients; });
   var fuel = loadFuel();
   var net = totalRevenue - fuel;
-  var driverName = localStorage.getItem('taxicost_driver') || 'Chauffeur';
+  var driverName = currentDriverName || 'Chauffeur';
 
   var rowsHtml = '';
   if (currentPeriod === 'day') {
@@ -915,11 +980,12 @@ function fuelKey() {
 }
 function onFuelChange() {
   var v = parseFloat(document.getElementById('fuel-input').value) || 0;
-  localStorage.setItem(fuelKey(), v);
+  appData.fuel[fuelKey()] = v;
+  persistAppData();
   updateNet();
 }
 function loadFuel() {
-  var v = parseFloat(localStorage.getItem(fuelKey()));
+  var v = parseFloat(appData.fuel[fuelKey()]);
   return isNaN(v) ? 0 : v;
 }
 function updateNet() {
@@ -1129,12 +1195,18 @@ function saveMaintenance() {
     vidangeDate: document.getElementById('vidange-date').value,
     vidangeDuration: document.getElementById('vidange-duration').value
   };
-  localStorage.setItem('taxicost_maintenance', JSON.stringify(data));
+  appData.maintenance = data;
+  persistAppData();
 }
 
 function loadMaintenance() {
-  var raw = localStorage.getItem('taxicost_maintenance');
-  return raw ? JSON.parse(raw) : { insuranceDate:'', insuranceDuration:'', vidangeDate:'', vidangeDuration:'' };
+  var d = appData.maintenance || {};
+  return {
+    insuranceDate: d.insuranceDate || '',
+    insuranceDuration: d.insuranceDuration || '',
+    vidangeDate: d.vidangeDate || '',
+    vidangeDuration: d.vidangeDuration || ''
+  };
 }
 
 function onMaintenanceChange() {
@@ -1301,27 +1373,11 @@ if ('serviceWorker' in navigator) {
 
 // ===== INIT =====
 (function init() {
-  // Le nom du chauffeur est chargé depuis Supabase via onAuthStateChange
-  // On garde juste le fallback si déjà en cache
-  var savedDriver = localStorage.getItem('taxicost_driver');
-  if (savedDriver) setDriverLabels(savedDriver);
+  // Le nom du chauffeur, la langue, les tarifs et l'historique sont chargés
+  // depuis Supabase (table app_data) une fois connecté, via enterApp()/finishEnterApp().
+  // Rien à charger localement ici.
 
-  var savedLang = localStorage.getItem('taxicost_lang') || 'fr';
-  setLang(savedLang);
-
-  if (!isAutoMode()) {
-    manualOverride = isNightTime() ? 'night' : 'day';
-  }
-  updateTarifPill();
-  render();
-
-updateNotifButton();
-  setTimeout(function() {
-    checkMaintenanceAlerts();
-    if ('Notification' in window && Notification.permission === 'granted') {
-      scheduleMaintenanceChecks();
-    }
-  }, 1500);
+  updateNotifButton();
 
   // Revérifie une fois par jour si l'app reste ouverte longtemps
   setInterval(function() {
