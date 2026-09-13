@@ -74,6 +74,31 @@ function doLogout() {
   auth.signOut();
 }
 
+function doForgotPassword() {
+  var email = document.getElementById('forgot-email').value.trim();
+  var errEl = document.getElementById('forgot-error');
+  errEl.style.color = '';
+  errEl.textContent = '';
+
+  if (!email) { errEl.style.color = '#dc2626'; errEl.textContent = 'Entre ton email'; return; }
+
+  auth.sendPasswordResetEmail(email)
+    .then(function() {
+      errEl.style.color = '#16a34a';
+      errEl.textContent = 'Email envoyé ! Vérifie ta boîte de réception (et les spams).';
+    })
+    .catch(function(e) {
+      errEl.style.color = '#dc2626';
+      if (e.code === 'auth/user-not-found') {
+        errEl.textContent = 'Aucun compte avec cet email';
+      } else if (e.code === 'auth/invalid-email') {
+        errEl.textContent = 'Email invalide';
+      } else {
+        errEl.textContent = 'Erreur : ' + e.message;
+      }
+    });
+}
+
 // ----- WhatsApp -----
 function openWhatsApp() {
   var user = auth.currentUser;
