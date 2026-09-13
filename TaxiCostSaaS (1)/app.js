@@ -83,12 +83,41 @@ function doLogout() {
   supabaseClient.auth.signOut();
 }
 
-// ----- WhatsApp -----
-function openWhatsApp() {
+// ----- Référence courte pour faire correspondre un virement CCP à un compte -----
+function shortRef(uid) {
+  return uid ? uid.slice(0, 8).toUpperCase() : '';
+}
+
+// Affiche la référence de l'utilisateur connecté sur les écrans pending/expired
+function updateRefLabels() {
   supabaseClient.auth.getUser().then(function(res) {
-    var email = (res.data && res.data.user) ? res.data.user.email : '';
+    var user = res.data && res.data.user;
+    if (!user) return;
+    var ref = shortRef(user.id);
+    var elP = document.getElementById('ref-pending');
+    var elE = document.getElementById('ref-expired');
+    if (elP) elP.textContent = ref;
+    if (elE) elE.textContent = ref;
+  });
+}
+
+// ----- Choix de formule + WhatsApp -----
+function subscribeToPlan(plan) {
+  supabaseClient.auth.getUser().then(function(res) {
+    var user = res.data && res.data.user;
+    if (!user) return;
+    var ref = shortRef(user.id);
+    var planLabel = plan === 'yearly' ? '1 an' : '1 mois';
+    var price = plan === 'yearly' ? '5000 DA' : PRIX_ABONNEMENT;
+
+    // Enregistre la formule choisie dans Supabase (aide à la v\u00e9rification c\u00f4t\u00e9 admin)
+    supabaseClient.from('subscriptions').update({ requested_plan: plan }).eq('user_id', user.id).then(function(){});
+
     var msg = encodeURIComponent(
-      'Bonjour, je souhaite activer mon abonnement TaxiCost (' + PRIX_ABONNEMENT + ').\nMon email : ' + email
+      'Bonjour, je souhaite activer mon abonnement TaxiCost.\n' +
+      'Formule : ' + planLabel + ' (' + price + ')\n' +
+      'Référence : ' + ref + '\n' +
+      'Email : ' + user.email
     );
     window.open('https://wa.me/' + WHATSAPP_NUMBER + '?text=' + msg, '_blank');
   });
@@ -108,12 +137,25 @@ supabaseClient.auth.onAuthStateChange(function(event, session) {
     .eq('user_id', user.id)
     .single()
     .then(function(res) {
-      if (res.error || !res.data) { showScreen('s-pending'); return; }
+      if (res.error || !res.data) { showScreen('s-pending'); updateRefLabels(); return; }
       var data = res.data;
       var name = data.name || 'Chauffeur';
 
-      // 1. Abonnement payant actif
+      // 1. Abonnement payant actif — on vérifie aussi la date de fin (30 jours / 1 an)
       if (data.status === 'active') {
+        if (data.subscription_end) {
+          var subEnd = new Date(data.subscription_end);
+          var nowActive = new Date();
+          if (subEnd > nowActive) {
+            enterApp(name);
+            return;
+          }
+          // Abonnement expiré → retour à l'écran de paiement
+          showScreen('s-expired');
+          updateRefLabels();
+          return;
+        }
+        // Pas de date de fin enregistrée (compte activé manuellement à l'ancienne) → accès illimité
         enterApp(name);
         return;
       }
@@ -129,11 +171,13 @@ supabaseClient.auth.onAuthStateChange(function(event, session) {
         }
         // Essai expiré → écran abonnement
         showScreen('s-expired');
+        updateRefLabels();
         return;
       }
 
       // 3. Pas actif, pas d'essai → en attente
       showScreen('s-pending');
+      updateRefLabels();
     });
 });
 
