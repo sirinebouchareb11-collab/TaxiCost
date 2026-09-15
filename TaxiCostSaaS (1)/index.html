@@ -658,6 +658,26 @@
         </div>
       </div>
 
+      <!-- PRIÈRES -->
+      <div class="settings-card">
+        <div class="auto-toggle-row">
+          <div>
+            <div class="auto-toggle-label">🕌 Rappels de prière</div>
+            <div class="auto-toggle-sub">Oran, Algérie · 10 min avant</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="prayer-notif-toggle" onchange="togglePrayerNotif(this.checked)">
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- COMPTE -->
+      <div class="settings-card">
+        <div class="settings-card-title">Compte</div>
+        <button class="reset-btn" onclick="doLogout()">Se déconnecter</button>
+      </div>
+
     </div>
 
     <div class="bottom-nav">
