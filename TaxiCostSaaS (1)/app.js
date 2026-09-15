@@ -232,6 +232,7 @@ function finishEnterApp(name, trialDaysLeft) {
       checkMaintenanceAlerts();
       if ('Notification' in window && Notification.permission === 'granted') {
         scheduleMaintenanceChecks();
+        if (isPrayerNotifEnabled()) schedulePrayerNotifications();
       }
     }, 1500);
   }, 1800);
@@ -437,6 +438,9 @@ function loadSettingsIntoInputs() {
   var savedLang = appData.settings.lang || 'fr';
   document.getElementById('lang-fr').className = 'lang-btn' + (savedLang === 'fr' ? ' active' : '');
   document.getElementById('lang-ar').className = 'lang-btn' + (savedLang === 'ar' ? ' active' : '');
+
+  var prayerToggle = document.getElementById('prayer-notif-toggle');
+  if (prayerToggle) prayerToggle.checked = isPrayerNotifEnabled();
 }
 
 function updateHoursSummary() {
@@ -1294,8 +1298,99 @@ function loadMaintenanceIntoInputs() {
 }
 
 // ===========================================================
-// ===== NOTIFICATIONS ANDROID (rappels assurance/vidange) =====
+// ===== NOTIFICATIONS — HORAIRES DE PRIÈRE (Oran, Algérie) =====
 // ===========================================================
+var PRAYER_CITY = 'Oran';
+var PRAYER_COUNTRY = 'Algeria';
+var PRAYER_METHOD = 3; // Muslim World League (peut différer de quelques minutes du calendrier officiel algérien)
+var PRAYER_ADVANCE_MIN = 10;
+var prayerTimeoutIds = [];
+
+function isPrayerNotifEnabled() {
+  return appData.settings.prayerEnabled === true;
+}
+
+function clearPrayerTimeouts() {
+  prayerTimeoutIds.forEach(function(id){ clearTimeout(id); });
+  prayerTimeoutIds = [];
+}
+
+function togglePrayerNotif(enabled) {
+  appData.settings.prayerEnabled = enabled;
+  persistAppData();
+  if (!enabled) { clearPrayerTimeouts(); return; }
+
+  if (!('Notification' in window)) { showToast('Notifications non supportées sur ce navigateur'); return; }
+  if (Notification.permission === 'granted') {
+    schedulePrayerNotifications();
+  } else {
+    Notification.requestPermission().then(function(perm) {
+      updateNotifButton();
+      if (perm === 'granted') {
+        schedulePrayerNotifications();
+      } else {
+        showToast('Notifications refusées — active-les dans les paramètres du navigateur');
+        appData.settings.prayerEnabled = false;
+        persistAppData();
+        var t = document.getElementById('prayer-notif-toggle');
+        if (t) t.checked = false;
+      }
+    });
+  }
+}
+
+function fetchPrayerTimes(callback) {
+  var todayKey = dayKey(new Date());
+  var cached = localStorage.getItem('taxicost_prayer_cache');
+  if (cached) {
+    try {
+      var parsed = JSON.parse(cached);
+      if (parsed.day === todayKey) { callback(parsed.timings); return; }
+    } catch(e) {}
+  }
+  var url = 'https://api.aladhan.com/v1/timingsByCity?city=' + encodeURIComponent(PRAYER_CITY) +
+    '&country=' + encodeURIComponent(PRAYER_COUNTRY) + '&method=' + PRAYER_METHOD;
+  fetch(url).then(function(r){ return r.json(); }).then(function(data) {
+    if (data && data.data && data.data.timings) {
+      localStorage.setItem('taxicost_prayer_cache', JSON.stringify({ day: todayKey, timings: data.data.timings }));
+      callback(data.data.timings);
+    }
+  }).catch(function() {
+    // Silencieux : pas grave de rater un jour de rappels si l'API est indisponible
+  });
+}
+
+function schedulePrayerNotifications() {
+  clearPrayerTimeouts();
+  fetchPrayerTimes(function(timings) {
+    var prayers = [
+      { key: 'Fajr', label: 'Fajr' },
+      { key: 'Dhuhr', label: 'Dhuhr' },
+      { key: 'Asr', label: 'Asr' },
+      { key: 'Maghrib', label: 'Maghrib' },
+      { key: 'Isha', label: 'Isha' }
+    ];
+    var now = new Date();
+    var today = dayKey(now);
+    prayers.forEach(function(p) {
+      var timeStr = timings[p.key];
+      if (!timeStr) return;
+      var parts = timeStr.split(':');
+      var prayerDate = new Date();
+      prayerDate.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0);
+      var notifyAt = new Date(prayerDate.getTime() - PRAYER_ADVANCE_MIN * 60000);
+      var delay = notifyAt.getTime() - now.getTime();
+      if (delay > 0) {
+        var id = setTimeout(function() {
+          sendNotification('🕌 Prière bientôt', p.label + ' dans ' + PRAYER_ADVANCE_MIN + ' minutes (' + timeStr + ')', 'prayer-' + p.key + '-' + today);
+        }, delay);
+        prayerTimeoutIds.push(id);
+      }
+    });
+  });
+}
+
+
 function requestNotificationPermission() {
   if (!('Notification' in window)) {
     showToast('Notifications non supportées sur ce navigateur');
@@ -1383,6 +1478,7 @@ if ('serviceWorker' in navigator) {
   setInterval(function() {
     if ('Notification' in window && Notification.permission === 'granted') {
       scheduleMaintenanceChecks();
+      if (isPrayerNotifEnabled()) schedulePrayerNotifications();
     }
   }, 6 * 60 * 60 * 1000); // toutes les 6h
 
