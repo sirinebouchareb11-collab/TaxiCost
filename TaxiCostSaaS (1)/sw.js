@@ -1,4 +1,4 @@
-var CACHE = 'taxicost-v9';
+var CACHE = 'taxicost-v10';
 var FILES = [
   '/',
   '/index.html',
@@ -10,6 +10,9 @@ var FILES = [
 ];
 
 self.addEventListener('install', function(e) {
+  // Force le nouveau service worker à prendre le relais immédiatement,
+  // sans attendre la fermeture de tous les onglets ouverts.
+  self.skipWaiting();
   e.waitUntil(
     caches.open(CACHE).then(function(cache) {
       return cache.addAll(FILES);
@@ -24,6 +27,9 @@ self.addEventListener('activate', function(e) {
         keys.filter(function(key){ return key !== CACHE; })
             .map(function(key){ return caches.delete(key); })
       );
+    }).then(function() {
+      // Prend le contrôle des onglets déjà ouverts immédiatement
+      return self.clients.claim();
     })
   );
 });
