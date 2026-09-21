@@ -221,6 +221,11 @@ function finishEnterApp(name, trialDaysLeft) {
   }
   updateTarifPill();
 
+  var restored = loadCurrentCourse();
+  if (restored) {
+    clients = restored.clients;
+    cid = restored.cid;
+  }
   if (clients.length === 0) addClient();
   render();
   showScreen('s-splash');
@@ -503,23 +508,46 @@ function onHoursSettingsChange() {
 }
 
 // ===== CLIENTS =====
+// La course en cours (clients pas encore terminés) est sauvegardée en direct
+// dans localStorage, pour ne rien perdre si le téléphone ferme l'app,
+// verrouille l'écran, ou que le chauffeur répond à un appel.
+function saveCurrentCourse() {
+  try {
+    localStorage.setItem('taxicost_current_course', JSON.stringify({ clients: clients, cid: cid }));
+  } catch (e) {}
+}
+function loadCurrentCourse() {
+  try {
+    var raw = localStorage.getItem('taxicost_current_course');
+    if (!raw) return null;
+    var parsed = JSON.parse(raw);
+    if (parsed && Array.isArray(parsed.clients) && parsed.clients.length > 0) return parsed;
+  } catch (e) {}
+  return null;
+}
+function clearCurrentCourse() {
+  localStorage.removeItem('taxicost_current_course');
+}
+
 function addClient() {
   cid++;
   clients.push({ id: cid, depart: '', arrivee: '' });
   render();
+  saveCurrentCourse();
 }
 function removeClient(id) {
   if (clients.length <= 1) return;
   clients = clients.filter(function(c){ return c.id !== id; });
   render();
+  saveCurrentCourse();
 }
 function onDepart(id, val) {
   var c = clients.find(function(c){ return c.id === id; });
-  if (c) { c.depart = val; renderCost(id); updateTotal(); }
+  if (c) { c.depart = val; renderCost(id); updateTotal(); saveCurrentCourse(); }
 }
 function onArrivee(id, val) {
   var c = clients.find(function(c){ return c.id === id; });
-  if (c) { c.arrivee = val; renderCost(id); updateTotal(); }
+  if (c) { c.arrivee = val; renderCost(id); updateTotal(); saveCurrentCourse(); }
 }
 
 // ===== CALCUL =====
