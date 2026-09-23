@@ -15,6 +15,21 @@
   --green-dark: #15803d;
 }
 
+:root[data-theme="dark"] {
+  --yellow: #FFC107;
+  --yellow-dark: #E0A800;
+  --dark: #0f0f1e;
+  --bg: #1a1a2e;
+  --card: #23233d;
+  --text: #f2f0e6;
+  --text-muted: #9391ab;
+  --border: #33324a;
+  --soft: #2b2a45;
+  --placeholder: #4d4b68;
+  --green: #22c55e;
+  --green-dark: #16a34a;
+}
+
 html, body {
   height: 100%;
   width: 100%;
@@ -76,7 +91,7 @@ html, body {
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 8px 30px rgba(255,193,7,0.35);
 }
-.app-name { font-size: 32px; font-weight: 700; color: var(--dark); }
+.app-name { font-size: 32px; font-weight: 700; color: var(--text); }
 .splash-footer { padding: 0 24px 48px; }
 
 /* ===== WELCOME ===== */
@@ -147,6 +162,7 @@ html, body {
   width: 28px; height: 28px; border-radius: 50%; border: none;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; flex-shrink: 0; background: var(--soft); transition: all .2s;
+  color: var(--text);
 }
 .mic-btn:active { transform: scale(0.9); }
 .mic-btn.listening { background: #ff3b3b; color: #fff; animation: pulse 0.8s infinite; }
@@ -319,7 +335,7 @@ html, body {
   background: var(--card); border: 1.5px solid var(--border);
   border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 14px;
 }
-.maint-card.alert { border-color: #f87171; background: #fff5f5; }
+.maint-card.alert { border-color: #f87171; background: color-mix(in srgb, var(--card) 70%, #fff5f5); }
 .maint-card.alert .maint-sub { color: #dc2626; font-weight: 700; }
 .maint-row { display: flex; align-items: center; justify-content: space-between; }
 .maint-label-group { display: flex; align-items: center; gap: 12px; }
@@ -333,7 +349,7 @@ html, body {
 .maint-field { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
 .maint-field.duration { flex: 0 0 90px; }
 .maint-field-label { font-size: 10px; color: var(--text-muted); font-weight: 600; }
-.maint-date-input { width: 100%; }
+.maint-date-input { width: 100%; color: var(--text); background: var(--card); border: 1.5px solid var(--border); border-radius: 8px; padding: 6px; }
 .maint-number-input { width: 100%; text-align: center; }
 
 
@@ -374,8 +390,8 @@ html, body {
   display: flex; align-items: center; justify-content: center; font-size: 18px;
   flex-shrink: 0;
 }
-.tarif-edit-icon.day { background: #FFF4D6; }
-.tarif-edit-icon.night { background: #E8E8F5; }
+.tarif-edit-icon.day { background: var(--soft); }
+.tarif-edit-icon.night { background: var(--soft); }
 .tarif-edit-group { flex: 1; }
 .tarif-edit-label { font-size: 13px; font-weight: 700; color: var(--text); }
 .tarif-edit-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
@@ -488,7 +504,7 @@ html, body {
 
 /* ===== BARRE ESSAI GRATUIT ===== */
 .trial-bar {
-  background: #1a1a2e;
+  background: var(--dark);
   padding: 8px 16px;
   display: flex;
   align-items: center;
@@ -524,3 +540,8 @@ html, body {
   flex-shrink: 0;
 }
 .trial-bar-days.urgent { color: #ef4444; }
+
+/* ===== RTL (mode arabe) ===== */
+html[dir="rtl"] .cell-field-label { text-align: right; }
+html[dir="rtl"] .day-badge .dnum,
+html[dir="rtl"] .day-badge .dname { text-align: center; }
