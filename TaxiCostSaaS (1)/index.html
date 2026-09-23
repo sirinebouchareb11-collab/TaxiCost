@@ -30,14 +30,14 @@
         </svg>
       </div>
       <div class="auth-title">TaxiCost</div>
-      <div class="auth-subtitle">Connectez-vous pour continuer</div>
+      <div class="auth-subtitle" data-i18n="login_subtitle">Connectez-vous pour continuer</div>
       <div class="auth-form">
-        <input class="auth-input" id="login-email" type="email" placeholder="Email" autocomplete="email">
-        <input class="auth-input" id="login-password" type="password" placeholder="Mot de passe" autocomplete="current-password">
+        <input class="auth-input" id="login-email" type="email" placeholder="Email" data-i18n-placeholder="ph_email" autocomplete="email">
+        <input class="auth-input" id="login-password" type="password" placeholder="Mot de passe" data-i18n-placeholder="ph_password" autocomplete="current-password">
         <div class="auth-error" id="login-error"></div>
-        <button class="btn-main" onclick="doLogin()">Se connecter</button>
-        <button class="auth-link" onclick="showScreen('s-forgot')">Mot de passe oublié ?</button>
-        <button class="auth-link" onclick="showScreen('s-register')">Pas encore de compte ? S'inscrire</button>
+        <button class="btn-main" onclick="doLogin()" data-i18n="login_btn">Se connecter</button>
+        <button class="auth-link" onclick="showScreen('s-forgot')" data-i18n="forgot_link">Mot de passe oublié ?</button>
+        <button class="auth-link" onclick="showScreen('s-register')" data-i18n="to_register">Pas encore de compte ? S'inscrire</button>
       </div>
     </div>
   </div>
@@ -59,13 +59,13 @@
           <rect x="33" y="0" width="18" height="8" rx="2" fill="#FFC107"/>
         </svg>
       </div>
-      <div class="auth-title">Mot de passe oublié</div>
-      <div class="auth-subtitle">Entre ton email, on t'enverra un lien pour le réinitialiser.</div>
+      <div class="auth-title" data-i18n="forgot_title">Mot de passe oublié</div>
+      <div class="auth-subtitle" data-i18n="forgot_subtitle">Entre ton email, on t'enverra un lien pour le réinitialiser.</div>
       <div class="auth-form">
-        <input class="auth-input" id="forgot-email" type="email" placeholder="Email" autocomplete="email">
+        <input class="auth-input" id="forgot-email" type="email" placeholder="Email" data-i18n-placeholder="ph_email" autocomplete="email">
         <div class="auth-error" id="forgot-error"></div>
-        <button class="btn-main" onclick="doForgotPassword()">Envoyer le lien</button>
-        <button class="auth-link" onclick="showScreen('s-login')">Retour à la connexion</button>
+        <button class="btn-main" onclick="doForgotPassword()" data-i18n="send_link">Envoyer le lien</button>
+        <button class="auth-link" onclick="showScreen('s-login')" data-i18n="back_to_login">Retour à la connexion</button>
       </div>
     </div>
   </div>
@@ -87,15 +87,15 @@
           <rect x="33" y="0" width="18" height="8" rx="2" fill="#FFC107"/>
         </svg>
       </div>
-      <div class="auth-title">Créer un compte</div>
-      <div class="auth-subtitle">Inscription gratuite · Abonnement 500 DA/mois</div>
+      <div class="auth-title" data-i18n="register_title">Créer un compte</div>
+      <div class="auth-subtitle" data-i18n="register_subtitle">Inscription gratuite · Abonnement 500 DA/mois</div>
       <div class="auth-form">
-        <input class="auth-input" id="reg-name" type="text" placeholder="Votre prénom" autocomplete="given-name">
-        <input class="auth-input" id="reg-email" type="email" placeholder="Email" autocomplete="email">
-        <input class="auth-input" id="reg-password" type="password" placeholder="Mot de passe (min. 6 caractères)" autocomplete="new-password">
+        <input class="auth-input" id="reg-name" type="text" placeholder="Votre prénom" data-i18n-placeholder="ph_name" autocomplete="given-name">
+        <input class="auth-input" id="reg-email" type="email" placeholder="Email" data-i18n-placeholder="ph_email" autocomplete="email">
+        <input class="auth-input" id="reg-password" type="password" placeholder="Mot de passe (min. 6 caractères)" data-i18n-placeholder="ph_password_hint" autocomplete="new-password">
         <div class="auth-error" id="reg-error"></div>
-        <button class="btn-main" onclick="doRegister()">S'inscrire</button>
-        <button class="auth-link" onclick="showScreen('s-login')">Déjà un compte ? Se connecter</button>
+        <button class="btn-main" onclick="doRegister()" data-i18n="register_btn">S'inscrire</button>
+        <button class="auth-link" onclick="showScreen('s-login')" data-i18n="to_login">Déjà un compte ? Se connecter</button>
       </div>
     </div>
   </div>
@@ -104,19 +104,16 @@
   <div class="screen" id="s-pending">
     <div class="auth-body">
       <div class="pending-icon">⏳</div>
-      <div class="auth-title">Compte en attente</div>
-      <div class="pending-msg">
-        Votre compte a été créé !<br><br>
-        Choisis ta formule, envoie le montant par CCP ou virement en indiquant bien ta référence <strong id="ref-pending">...</strong>, puis contacte-nous sur WhatsApp pour confirmer.
-      </div>
+      <div class="auth-title" data-i18n="pending_title">Compte en attente</div>
+      <div class="pending-msg" id="pending-msg-text"></div>
       <div class="pending-contact">
-        <a class="btn-whatsapp" href="#" onclick="subscribeToPlan('monthly'); return false;">📅 1 mois — 500 DA</a>
+        <a class="btn-whatsapp" href="#" onclick="subscribeToPlan('monthly'); return false;" data-i18n="plan_monthly">📅 1 mois — 500 DA</a>
       </div>
       <div class="pending-contact" style="margin-top:10px;">
-        <a class="btn-whatsapp" href="#" onclick="subscribeToPlan('yearly'); return false;">🗓️ 1 an — 5000 DA</a>
+        <a class="btn-whatsapp" href="#" onclick="subscribeToPlan('yearly'); return false;" data-i18n="plan_yearly">🗓️ 1 an — 5000 DA</a>
       </div>
-      <div class="pending-note">Une fois votre paiement confirmé, votre accès sera activé sous 24h.</div>
-      <button class="auth-link" style="margin-top:16px;" onclick="doLogout()">Se déconnecter</button>
+      <div class="pending-note" data-i18n="pending_note">Une fois votre paiement confirmé, votre accès sera activé sous 24h.</div>
+      <button class="auth-link" style="margin-top:16px;" onclick="doLogout()" data-i18n="logout">Se déconnecter</button>
     </div>
   </div>
 
@@ -124,19 +121,16 @@
   <div class="screen" id="s-expired">
     <div class="auth-body">
       <div class="pending-icon">🔒</div>
-      <div class="auth-title">Essai terminé</div>
-      <div class="pending-msg">
-        Ton essai gratuit ou ton abonnement est terminé.<br><br>
-        Choisis ta formule, envoie le montant par CCP ou virement en indiquant bien ta référence <strong id="ref-expired">...</strong>, puis contacte-nous sur WhatsApp pour confirmer.
-      </div>
+      <div class="auth-title" data-i18n="expired_title">Essai terminé</div>
+      <div class="pending-msg" id="expired-msg-text"></div>
       <div class="pending-contact">
-        <a class="btn-whatsapp" href="#" onclick="subscribeToPlan('monthly'); return false;">📅 1 mois — 500 DA</a>
+        <a class="btn-whatsapp" href="#" onclick="subscribeToPlan('monthly'); return false;" data-i18n="plan_monthly">📅 1 mois — 500 DA</a>
       </div>
       <div class="pending-contact" style="margin-top:10px;">
-        <a class="btn-whatsapp" href="#" onclick="subscribeToPlan('yearly'); return false;">🗓️ 1 an — 5000 DA</a>
+        <a class="btn-whatsapp" href="#" onclick="subscribeToPlan('yearly'); return false;" data-i18n="plan_yearly">🗓️ 1 an — 5000 DA</a>
       </div>
-      <div class="pending-note">Une fois votre paiement confirmé, votre accès sera rétabli sous 24h.</div>
-      <button class="auth-link" style="margin-top:16px;" onclick="doLogout()">Se déconnecter</button>
+      <div class="pending-note" data-i18n="expired_note">Une fois votre paiement confirmé, votre accès sera rétabli sous 24h.</div>
+      <button class="auth-link" style="margin-top:16px;" onclick="doLogout()" data-i18n="logout">Se déconnecter</button>
     </div>
   </div>
 
@@ -218,7 +212,7 @@
     </div>
 
     <div class="trial-bar" id="trial-bar-main" style="display:none;">
-      <span class="trial-bar-label">🎁 Essai gratuit</span>
+      <span class="trial-bar-label" data-i18n="trial_label">🎁 Essai gratuit</span>
       <div class="trial-bar-track"><div class="trial-bar-fill" id="trial-fill-main"></div></div>
       <span class="trial-bar-days" id="trial-days-main"></span>
     </div>
@@ -226,51 +220,51 @@
     <div class="main-body">
 
       <div class="section-block">
-        <span class="section-label">Course en cours</span>
-        <div class="voice-hint" id="voice-hint">🎤 pour dicter un chiffre</div>
+        <span class="section-label" data-i18n="current_course">Course en cours</span>
+        <div class="voice-hint" id="voice-hint" data-i18n="voice_hint">🎤 pour dicter un chiffre</div>
       </div>
 
       <div class="clients-stack" id="clients-list"></div>
 
       <button class="add-btn" onclick="addClient()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-        Nouveau client
+        <span data-i18n="new_client">Nouveau client</span>
       </button>
 
       <div class="total-box">
         <div>
-          <div class="total-label">Total course</div>
+          <div class="total-label" data-i18n="total_course">Total course</div>
           <div class="total-val" id="total-val">0 DA</div>
         </div>
         <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#FFC107" stroke-width="1.5" stroke-linecap="round" opacity="0.4"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
       </div>
 
       <div class="action-stack">
-        <button class="end-btn" onclick="endCourse()">✓ Terminer la course</button>
-        <button class="reset-btn" onclick="resetAll()">Annuler / Vider</button>
+        <button class="end-btn" onclick="endCourse()" data-i18n="end_course">✓ Terminer la course</button>
+        <button class="reset-btn" onclick="resetAll()" data-i18n="cancel_clear">Annuler / Vider</button>
       </div>
     </div>
 
     <div class="bottom-nav">
       <button class="nav-btn active" onclick="goTab('s-main', this)">
         <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg>
-        <span>Course</span>
+        <span data-i18n="nav_course">Course</span>
       </button>
       <button class="nav-btn" onclick="goTab('s-stats', this)">
         <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        <span>Stats</span>
+        <span data-i18n="nav_stats">Stats</span>
       </button>
       <button class="nav-btn" onclick="goTab('s-history', this)">
         <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
-        <span>Historique</span>
+        <span data-i18n="nav_history">Historique</span>
       </button>
       <button class="nav-btn" onclick="goTab('s-maintenance', this)">
         <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-        <span>Entretien</span>
+        <span data-i18n="nav_maint">Entretien</span>
       </button>
       <button class="nav-btn" onclick="goTab('s-settings', this)">
         <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        <span>Réglages</span>
+        <span data-i18n="nav_settings">Réglages</span>
       </button>
     </div>
   </div>
@@ -293,13 +287,13 @@
         </svg>
       </div>
       <div>
-        <div class="topbar-title">Statistiques</div>
+        <div class="topbar-title" data-i18n="title_stats">Statistiques</div>
         <div class="topbar-driver" id="driver-label-stats"></div>
       </div>
     </div>
 
     <div class="trial-bar" id="trial-bar-stats" style="display:none;">
-      <span class="trial-bar-label">🎁 Essai gratuit</span>
+      <span class="trial-bar-label" data-i18n="trial_label">🎁 Essai gratuit</span>
       <div class="trial-bar-track"><div class="trial-bar-fill" id="trial-fill-stats"></div></div>
       <span class="trial-bar-days" id="trial-days-stats"></span>
     </div>
@@ -307,20 +301,20 @@
     <div class="stats-body">
 
       <div class="period-toggle">
-        <button class="period-btn active" id="period-day" onclick="setPeriod('day')">Jour</button>
-        <button class="period-btn" id="period-week" onclick="setPeriod('week')">Semaine</button>
-        <button class="period-btn" id="period-month" onclick="setPeriod('month')">Mois</button>
+        <button class="period-btn active" id="period-day" onclick="setPeriod('day')"><span data-i18n="period_day">Jour</span></button>
+        <button class="period-btn" id="period-week" onclick="setPeriod('week')"><span data-i18n="period_week">Semaine</span></button>
+        <button class="period-btn" id="period-month" onclick="setPeriod('month')"><span data-i18n="period_month">Mois</span></button>
       </div>
       <div class="stat-date" id="stat-date"></div>
 
       <div class="stat-big-card">
-        <div class="stat-big-label" id="stat-revenue-label">Revenu brut</div>
+        <div class="stat-big-label" id="stat-revenue-label" data-i18n="revenue_gross">Revenu brut</div>
         <div class="stat-big-val" id="stat-revenue">0 DA</div>
       </div>
 
       <div class="stat-row">
-        <div class="stat-mini"><div class="stat-mini-val" id="stat-courses">0</div><div class="stat-mini-label">Courses</div></div>
-        <div class="stat-mini"><div class="stat-mini-val" id="stat-clients">0</div><div class="stat-mini-label">Clients</div></div>
+        <div class="stat-mini"><div class="stat-mini-val" id="stat-courses">0</div><div class="stat-mini-label" data-i18n="courses_label">Courses</div></div>
+        <div class="stat-mini"><div class="stat-mini-val" id="stat-clients">0</div><div class="stat-mini-label" data-i18n="clients_label">Clients</div></div>
       </div>
 
       <!-- ESSENCE -->
@@ -330,8 +324,8 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22h12"/><path d="M4 9h10v13H4z"/><path d="M14 9h2a2 2 0 0 1 2 2v2.5l2 1.5v5.5a1.5 1.5 0 0 1-3 0"/><path d="M9 6V4a1 1 0 0 1 1-1h0a1 1 0 0 1 1 1v2"/></svg>
           </div>
           <div>
-            <div class="fuel-text">Essence</div>
-            <div class="fuel-sub" id="fuel-sub">Coût du jour</div>
+            <div class="fuel-text" data-i18n="fuel">Essence</div>
+            <div class="fuel-sub" id="fuel-sub" data-i18n="fuel_sub_day">Coût du jour</div>
           </div>
         </div>
         <div class="fuel-input-group">
@@ -343,44 +337,44 @@
       <!-- NET -->
       <div class="net-card">
         <div>
-          <div class="net-label">Revenu net</div>
-          <div class="net-sub" id="net-sub">Brut − essence</div>
+          <div class="net-label" data-i18n="revenue_net">Revenu net</div>
+          <div class="net-sub" id="net-sub" data-i18n="net_sub">Brut − essence</div>
         </div>
         <div class="net-val" id="net-val">0 DA</div>
       </div>
 
       <!-- CHART -->
       <div class="chart-card">
-        <div class="chart-title" id="chart-title">Revenus par heure</div>
+        <div class="chart-title" id="chart-title" data-i18n="chart_hourly">Revenus par heure</div>
         <svg class="chart-svg" id="chart-svg" viewBox="0 0 300 140"></svg>
       </div>
 
       <button class="pdf-btn" onclick="exportPDF()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
-        Exporter en PDF
+        <span data-i18n="export_pdf">Exporter en PDF</span>
       </button>
     </div>
 
     <div class="bottom-nav">
       <button class="nav-btn" onclick="goTab('s-main', this)">
         <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg>
-        <span>Course</span>
+        <span data-i18n="nav_course">Course</span>
       </button>
       <button class="nav-btn active" onclick="goTab('s-stats', this)">
         <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        <span>Stats</span>
+        <span data-i18n="nav_stats">Stats</span>
       </button>
       <button class="nav-btn" onclick="goTab('s-history', this)">
         <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
-        <span>Historique</span>
+        <span data-i18n="nav_history">Historique</span>
       </button>
       <button class="nav-btn" onclick="goTab('s-maintenance', this)">
         <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-        <span>Entretien</span>
+        <span data-i18n="nav_maint">Entretien</span>
       </button>
       <button class="nav-btn" onclick="goTab('s-settings', this)">
         <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        <span>Réglages</span>
+        <span data-i18n="nav_settings">Réglages</span>
       </button>
     </div>
   </div>
@@ -403,54 +397,54 @@
         </svg>
       </div>
       <div>
-        <div class="topbar-title">Historique</div>
+        <div class="topbar-title" data-i18n="title_history">Historique</div>
         <div class="topbar-driver" id="driver-label-history"></div>
       </div>
     </div>
 
     <div class="trial-bar" id="trial-bar-history" style="display:none;">
-      <span class="trial-bar-label">🎁 Essai gratuit</span>
+      <span class="trial-bar-label" data-i18n="trial_label">🎁 Essai gratuit</span>
       <div class="trial-bar-track"><div class="trial-bar-fill" id="trial-fill-history"></div></div>
       <span class="trial-bar-days" id="trial-days-history"></span>
     </div>
 
     <div class="stats-body">
       <div class="period-toggle">
-        <button class="period-btn active" id="hperiod-day" onclick="setHistoryPeriod('day')">Jour</button>
-        <button class="period-btn" id="hperiod-week" onclick="setHistoryPeriod('week')">Semaine</button>
-        <button class="period-btn" id="hperiod-month" onclick="setHistoryPeriod('month')">Mois</button>
+        <button class="period-btn active" id="hperiod-day" onclick="setHistoryPeriod('day')"><span data-i18n="period_day">Jour</span></button>
+        <button class="period-btn" id="hperiod-week" onclick="setHistoryPeriod('week')"><span data-i18n="period_week">Semaine</span></button>
+        <button class="period-btn" id="hperiod-month" onclick="setHistoryPeriod('month')"><span data-i18n="period_month">Mois</span></button>
       </div>
 
-      <button class="undo-btn" id="undo-btn" onclick="undoLast()">↩ Annuler la dernière course</button>
+      <button class="undo-btn" id="undo-btn" onclick="undoLast()" data-i18n="undo_last">↩ Annuler la dernière course</button>
 
       <div class="history-section">
-        <div class="history-title" id="history-title">Courses du jour</div>
-        <div id="history-list"><div class="history-empty">Aucune course pour le moment</div></div>
+        <div class="history-title" id="history-title" data-i18n="history_today">Courses du jour</div>
+        <div id="history-list"><div class="history-empty" data-i18n="no_course_yet">Aucune course pour le moment</div></div>
       </div>
 
-      <button class="clear-stats-btn" onclick="clearStats()">Réinitialiser tout l'historique</button>
+      <button class="clear-stats-btn" onclick="clearStats()" data-i18n="clear_history">Réinitialiser tout l'historique</button>
     </div>
 
     <div class="bottom-nav">
       <button class="nav-btn" onclick="goTab('s-main', this)">
         <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg>
-        <span>Course</span>
+        <span data-i18n="nav_course">Course</span>
       </button>
       <button class="nav-btn" onclick="goTab('s-stats', this)">
         <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        <span>Stats</span>
+        <span data-i18n="nav_stats">Stats</span>
       </button>
       <button class="nav-btn active" onclick="goTab('s-history', this)">
         <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
-        <span>Historique</span>
+        <span data-i18n="nav_history">Historique</span>
       </button>
       <button class="nav-btn" onclick="goTab('s-maintenance', this)">
         <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-        <span>Entretien</span>
+        <span data-i18n="nav_maint">Entretien</span>
       </button>
       <button class="nav-btn" onclick="goTab('s-settings', this)">
         <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        <span>Réglages</span>
+        <span data-i18n="nav_settings">Réglages</span>
       </button>
     </div>
   </div>
@@ -473,19 +467,19 @@
         </svg>
       </div>
       <div>
-        <div class="topbar-title">Entretien</div>
+        <div class="topbar-title" data-i18n="title_maint">Entretien</div>
         <div class="topbar-driver" id="driver-label-maint"></div>
       </div>
     </div>
  
     <div class="trial-bar" id="trial-bar-maint" style="display:none;">
-      <span class="trial-bar-label">🎁 Essai gratuit</span>
+      <span class="trial-bar-label" data-i18n="trial_label">🎁 Essai gratuit</span>
       <div class="trial-bar-track"><div class="trial-bar-fill" id="trial-fill-maint"></div></div>
       <span class="trial-bar-days" id="trial-days-maint"></span>
     </div>
  
     <div class="stats-body">
-      <button class="notif-permission-btn" id="notif-btn" onclick="requestNotificationPermission()">
+      <button class="notif-permission-btn" id="notif-btn" onclick="requestNotificationPermission()" data-i18n="enable_reminders">
         🔔 Activer les rappels sur le téléphone
       </button>
 
@@ -494,18 +488,18 @@
           <div class="maint-label-group">
             <div class="maint-icon">🛡️</div>
             <div>
-              <div class="maint-text">Assurance</div>
-              <div class="maint-sub" id="insurance-status">Non renseignée</div>
+              <div class="maint-text" data-i18n="insurance">Assurance</div>
+              <div class="maint-sub" id="insurance-status" data-i18n="not_set">Non renseignée</div>
             </div>
           </div>
         </div>
         <div class="maint-inputs">
           <div class="maint-field">
-            <span class="maint-field-label">Date de paiement</span>
+            <span class="maint-field-label" data-i18n="payment_date">Date de paiement</span>
             <input type="date" id="insurance-date" class="maint-date-input" onchange="onMaintenanceChange()">
           </div>
           <div class="maint-field duration">
-            <span class="maint-field-label">Durée (mois)</span>
+            <span class="maint-field-label" data-i18n="duration_months">Durée (mois)</span>
             <input type="number" id="insurance-duration" class="maint-number-input" placeholder="12" min="1" onchange="onMaintenanceChange()">
           </div>
         </div>
@@ -516,18 +510,18 @@
           <div class="maint-label-group">
             <div class="maint-icon">🛢️</div>
             <div>
-              <div class="maint-text">Vidange</div>
-              <div class="maint-sub" id="vidange-status">Non renseignée</div>
+              <div class="maint-text" data-i18n="oil_change">Vidange</div>
+              <div class="maint-sub" id="vidange-status" data-i18n="not_set">Non renseignée</div>
             </div>
           </div>
         </div>
         <div class="maint-inputs">
           <div class="maint-field">
-            <span class="maint-field-label">Date de la vidange</span>
+            <span class="maint-field-label" data-i18n="oil_change_date">Date de la vidange</span>
             <input type="date" id="vidange-date" class="maint-date-input" onchange="onMaintenanceChange()">
           </div>
           <div class="maint-field duration">
-            <span class="maint-field-label">Durée (mois)</span>
+            <span class="maint-field-label" data-i18n="duration_months">Durée (mois)</span>
             <input type="number" id="vidange-duration" class="maint-number-input" placeholder="3" min="1" onchange="onMaintenanceChange()">
           </div>
         </div>
@@ -538,23 +532,23 @@
     <div class="bottom-nav">
       <button class="nav-btn" onclick="goTab('s-main', this)">
         <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg>
-        <span>Course</span>
+        <span data-i18n="nav_course">Course</span>
       </button>
       <button class="nav-btn" onclick="goTab('s-stats', this)">
         <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        <span>Stats</span>
+        <span data-i18n="nav_stats">Stats</span>
       </button>
       <button class="nav-btn" onclick="goTab('s-history', this)">
         <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
-        <span>Historique</span>
+        <span data-i18n="nav_history">Historique</span>
       </button>
       <button class="nav-btn active" onclick="goTab('s-maintenance', this)">
         <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-        <span>Entretien</span>
+        <span data-i18n="nav_maint">Entretien</span>
       </button>
       <button class="nav-btn" onclick="goTab('s-settings', this)">
         <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        <span>Réglages</span>
+        <span data-i18n="nav_settings">Réglages</span>
       </button>
     </div>
   </div>
@@ -577,13 +571,13 @@
         </svg>
       </div>
       <div>
-        <div class="topbar-title">Réglages</div>
+        <div class="topbar-title" data-i18n="title_settings">Réglages</div>
         <div class="topbar-driver" id="driver-label-settings"></div>
       </div>
     </div>
 
     <div class="trial-bar" id="trial-bar-settings" style="display:none;">
-      <span class="trial-bar-label">🎁 Essai gratuit</span>
+      <span class="trial-bar-label" data-i18n="trial_label">🎁 Essai gratuit</span>
       <div class="trial-bar-track"><div class="trial-bar-fill" id="trial-fill-settings"></div></div>
       <span class="trial-bar-days" id="trial-days-settings"></span>
     </div>
@@ -592,10 +586,10 @@
 
       <!-- LANGUE -->
       <div class="settings-card">
-        <div class="settings-card-title">Langue du micro</div>
+        <div class="settings-card-title" data-i18n="app_language">Langue de l'app</div>
         <div class="lang-toggle full">
-          <button class="lang-btn active" id="lang-fr" onclick="setLang('fr')">🇫🇷 Français</button>
-          <button class="lang-btn" id="lang-ar" onclick="setLang('ar')">🇩🇿 العربية</button>
+          <button class="lang-btn active" id="lang-fr" onclick="setUiLang('fr')">🇫🇷 Français</button>
+          <button class="lang-btn" id="lang-ar" onclick="setUiLang('ar')">🇩🇿 العربية</button>
         </div>
       </div>
 
@@ -603,8 +597,8 @@
       <div class="settings-card">
         <div class="auto-toggle-row">
           <div>
-            <div class="auto-toggle-label">Tarif automatique</div>
-            <div class="auto-toggle-sub" id="auto-toggle-sub">Jour <span id="hours-summary-day">6h–20h</span> · Nuit <span id="hours-summary-night">20h–6h</span></div>
+            <div class="auto-toggle-label" data-i18n="auto_tarif">Tarif automatique</div>
+            <div class="auto-toggle-sub" id="auto-toggle-sub"><span data-i18n="day_short">Jour</span> <span id="hours-summary-day">6h–20h</span> · <span data-i18n="night_short">Nuit</span> <span id="hours-summary-night">20h–6h</span></div>
           </div>
           <label class="switch">
             <input type="checkbox" id="auto-tarif-toggle" checked onchange="onAutoToggle()">
@@ -615,8 +609,8 @@
         <div class="tarif-edit-row">
           <div class="tarif-edit-icon day">☀️</div>
           <div class="tarif-edit-group">
-            <div class="tarif-edit-label">Tarif jour</div>
-            <div class="tarif-edit-sub">Montant fixe</div>
+            <div class="tarif-edit-label" data-i18n="tarif_day">Tarif jour</div>
+            <div class="tarif-edit-sub" data-i18n="fixed_amount">Montant fixe</div>
           </div>
           <div class="tarif-edit-input-group">
             <input class="tarif-edit-input" id="tarif-day-input" type="number" value="20" min="0" oninput="onTarifSettingsChange()">
@@ -627,8 +621,8 @@
         <div class="tarif-edit-row">
           <div class="tarif-edit-icon night">🌙</div>
           <div class="tarif-edit-group">
-            <div class="tarif-edit-label">Tarif nuit</div>
-            <div class="tarif-edit-sub">Montant fixe</div>
+            <div class="tarif-edit-label" data-i18n="tarif_night">Tarif nuit</div>
+            <div class="tarif-edit-sub" data-i18n="fixed_amount">Montant fixe</div>
           </div>
           <div class="tarif-edit-input-group">
             <input class="tarif-edit-input" id="tarif-night-input" type="number" value="30" min="0" oninput="onTarifSettingsChange()">
@@ -638,22 +632,22 @@
 
         <div class="hours-edit-row">
           <div class="hours-edit-field">
-            <span class="hours-edit-label">Début nuit</span>
+            <span class="hours-edit-label" data-i18n="night_start">Début nuit</span>
             <input class="hours-edit-input" id="night-start-input" type="number" value="20" min="0" max="23" oninput="onHoursSettingsChange()">
             <span class="hours-edit-unit">h</span>
           </div>
           <div class="hours-edit-field">
-            <span class="hours-edit-label">Fin nuit</span>
+            <span class="hours-edit-label" data-i18n="night_end">Fin nuit</span>
             <input class="hours-edit-input" id="night-end-input" type="number" value="6" min="0" max="23" oninput="onHoursSettingsChange()">
             <span class="hours-edit-unit">h</span>
           </div>
         </div>
 
         <div class="manual-active-note" id="manual-active-note" style="display:none;">
-          Mode manuel actif — choisis le tarif à utiliser pour la course en cours :
+          <span data-i18n="manual_mode_note">Mode manuel actif — choisis le tarif à utiliser pour la course en cours :</span>
           <div class="manual-pick-row">
-            <button class="manual-pick-btn" id="pick-day" onclick="pickManualTarif('day')">☀️ Jour</button>
-            <button class="manual-pick-btn" id="pick-night" onclick="pickManualTarif('night')">🌙 Nuit</button>
+            <button class="manual-pick-btn" id="pick-day" onclick="pickManualTarif('day')">☀️ <span data-i18n="day_short">Jour</span></button>
+            <button class="manual-pick-btn" id="pick-night" onclick="pickManualTarif('night')">🌙 <span data-i18n="night_short">Nuit</span></button>
           </div>
         </div>
       </div>
@@ -662,11 +656,34 @@
       <div class="settings-card">
         <div class="auto-toggle-row">
           <div>
-            <div class="auto-toggle-label">🕌 Rappels de prière</div>
-            <div class="auto-toggle-sub">Oran, Algérie · 10 min avant</div>
+            <div class="auto-toggle-label" data-i18n="prayer_label">🕌 Rappels de prière</div>
+            <div class="auto-toggle-sub" data-i18n="prayer_sub">10 min avant chaque prière</div>
           </div>
           <label class="switch">
             <input type="checkbox" id="prayer-notif-toggle" onchange="togglePrayerNotif(this.checked)">
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+        <div class="tarif-edit-row" style="margin-top:12px;">
+          <div class="tarif-edit-icon day">📍</div>
+          <div class="tarif-edit-group">
+            <div class="tarif-edit-label" data-i18n="prayer_wilaya">Wilaya</div>
+            <div class="tarif-edit-sub" data-i18n="prayer_wilaya_sub">Utilisée pour calculer les horaires</div>
+          </div>
+          <select id="prayer-wilaya-select" onchange="onPrayerWilayaChange(this.value)" style="font-size:13px;font-weight:700;color:var(--text);background:var(--soft);border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;">
+          </select>
+        </div>
+      </div>
+
+      <!-- APPARENCE -->
+      <div class="settings-card">
+        <div class="auto-toggle-row">
+          <div>
+            <div class="auto-toggle-label" data-i18n="dark_mode_label">🌗 Mode sombre</div>
+            <div class="auto-toggle-sub" data-i18n="dark_mode_sub">Fond bleu nuit</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="dark-mode-toggle" onchange="toggleDarkMode(this.checked)">
             <span class="switch-slider"></span>
           </label>
         </div>
@@ -674,8 +691,8 @@
 
       <!-- COMPTE -->
       <div class="settings-card">
-        <div class="settings-card-title">Compte</div>
-        <button class="reset-btn" onclick="doLogout()">Se déconnecter</button>
+        <div class="settings-card-title" data-i18n="account">Compte</div>
+        <button class="reset-btn" onclick="doLogout()" data-i18n="logout">Se déconnecter</button>
       </div>
 
     </div>
@@ -683,23 +700,23 @@
     <div class="bottom-nav">
       <button class="nav-btn" onclick="goTab('s-main', this)">
         <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg>
-        <span>Course</span>
+        <span data-i18n="nav_course">Course</span>
       </button>
       <button class="nav-btn" onclick="goTab('s-stats', this)">
         <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        <span>Stats</span>
+        <span data-i18n="nav_stats">Stats</span>
       </button>
       <button class="nav-btn" onclick="goTab('s-history', this)">
         <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
-        <span>Historique</span>
+        <span data-i18n="nav_history">Historique</span>
       </button>
       <button class="nav-btn" onclick="goTab('s-maintenance', this)">
         <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-        <span>Entretien</span>
+        <span data-i18n="nav_maint">Entretien</span>
       </button>
       <button class="nav-btn active" onclick="goTab('s-settings', this)">
         <svg class="icon-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        <span>Réglages</span>
+        <span data-i18n="nav_settings">Réglages</span>
       </button>
     </div>
   </div>
