@@ -214,8 +214,13 @@ function finishEnterApp(name, trialDaysLeft) {
   }
   setDriverLabels(name);
 
-  // Applique la langue et les tarifs synchronisés
-  setLang(appData.settings.lang || 'fr');
+  // Applique le thème (mode sombre/clair) synchronisé
+  applyTheme();
+  localStorage.setItem('taxicost_theme_cache', isDarkMode() ? 'dark' : 'light');
+
+  // Applique la langue (interface + reconnaissance vocale) et les tarifs synchronisés
+  currentLang = getUiLang() === 'ar' ? 'ar-DZ' : 'fr-FR';
+  applyTranslations();
   if (!isAutoMode()) {
     manualOverride = isNightTime() ? 'night' : 'day';
   }
@@ -272,6 +277,29 @@ function updateTrialBars(trialDaysLeft) {
 // ===== DONNÉES APP (historique, réglages, entretien) — synchronisées via Supabase =====
 // ===========================================================
 var appData = { courses: [], fuel: {}, maintenance: {}, settings: {} };
+
+// ===== MODE SOMBRE =====
+function isDarkMode() {
+  return appData.settings.darkMode === true;
+}
+function applyTheme() {
+  var dark = isDarkMode();
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  var meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', dark ? '#1a1a2e' : '#FFC107');
+}
+function toggleDarkMode(checked) {
+  appData.settings.darkMode = checked;
+  persistAppData();
+  localStorage.setItem('taxicost_theme_cache', checked ? 'dark' : 'light');
+  applyTheme();
+}
+// Peinture instantanée avant même le chargement des données Supabase, pour éviter un flash
+(function paintCachedTheme() {
+  var cached = localStorage.getItem('taxicost_theme_cache');
+  if (cached === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+})();
+
 var persistTimeoutId = null;
 
 function persistAppData() {
@@ -294,6 +322,188 @@ function persistAppData() {
 }
 
 // ===========================================================
+// ===== TRADUCTIONS (FR / AR) =====
+// ===========================================================
+var I18N = {
+  fr: {
+    nav_course: 'Course', nav_stats: 'Stats', nav_history: 'Historique', nav_maint: 'Entretien', nav_settings: 'Réglages',
+    title_stats: 'Statistiques', title_history: 'Historique', title_maint: 'Entretien', title_settings: 'Réglages',
+    trial_label: '🎁 Essai gratuit',
+    period_day: 'Jour', period_week: 'Semaine', period_month: 'Mois',
+    login_subtitle: 'Connectez-vous pour continuer', ph_email: 'Email', ph_password: 'Mot de passe',
+    login_btn: 'Se connecter', forgot_link: 'Mot de passe oublié ?', to_register: "Pas encore de compte ? S'inscrire",
+    forgot_title: 'Mot de passe oublié', forgot_subtitle: "Entre ton email, on t'enverra un lien pour le réinitialiser.",
+    send_link: 'Envoyer le lien', back_to_login: 'Retour à la connexion',
+    register_title: 'Créer un compte', register_subtitle: 'Inscription gratuite · Abonnement 500 DA/mois',
+    ph_name: 'Votre prénom', ph_password_hint: 'Mot de passe (min. 6 caractères)',
+    register_btn: "S'inscrire", to_login: 'Déjà un compte ? Se connecter',
+    pending_title: 'Compte en attente',
+    pending_msg1: 'Votre compte a été créé !',
+    pending_msg2: 'Choisis ta formule, envoie le montant par CCP ou virement en indiquant bien ta référence',
+    pending_msg3: 'puis contacte-nous sur WhatsApp pour confirmer.',
+    plan_monthly: '📅 1 mois — 500 DA', plan_yearly: '🗓️ 1 an — 5000 DA',
+    pending_note: 'Une fois votre paiement confirmé, votre accès sera activé sous 24h.', logout: 'Se déconnecter',
+    expired_title: 'Essai terminé',
+    expired_msg1: 'Ton essai gratuit ou ton abonnement est terminé.',
+    expired_note: 'Une fois votre paiement confirmé, votre accès sera rétabli sous 24h.',
+    current_course: 'Course en cours', voice_hint: '🎤 pour dicter un chiffre', new_client: 'Nouveau client',
+    total_course: 'Total course', end_course: '✓ Terminer la course', cancel_clear: 'Annuler / Vider',
+    revenue_gross: 'Revenu brut', revenue_gross_day: 'Revenu brut du jour', revenue_gross_week: 'Revenu brut de la semaine', revenue_gross_month: 'Revenu brut du mois',
+    courses_label: 'Courses', clients_label: 'Clients',
+    fuel: 'Essence', fuel_sub_day: 'Coût du jour', fuel_sub_week: 'Coût de la semaine', fuel_sub_month: 'Coût du mois',
+    revenue_net: 'Revenu net', net_sub: 'Brut − essence', net_sub_day: 'Brut − essence (jour)',
+    net_sub_week: 'Brut − essence (semaine)', net_sub_month: 'Brut − essence (mois)',
+    chart_hourly: 'Revenus par heure', chart_daily_week: 'Revenus par jour (semaine)', chart_daily_month: 'Revenus par jour (mois)',
+    export_pdf: 'Exporter en PDF',
+    undo_last: '↩ Annuler la dernière course', history_today: 'Courses du jour',
+    history_week: 'Détail par jour (semaine)', history_month: 'Détail par jour (mois)',
+    no_course_yet: 'Aucune course pour le moment', clear_history: "Réinitialiser tout l'historique",
+    enable_reminders: '🔔 Activer les rappels sur le téléphone', reminders_on: '🔔 Rappels activés',
+    insurance: 'Assurance', not_set: 'Non renseignée', payment_date: 'Date de paiement',
+    duration_months: 'Durée (mois)', oil_change: 'Vidange', oil_change_date: 'Date de la vidange',
+    app_language: "Langue de l'app", auto_tarif: 'Tarif automatique', day_short: 'Jour', night_short: 'Nuit',
+    tarif_day: 'Tarif jour', fixed_amount: 'Montant fixe', tarif_night: 'Tarif nuit',
+    night_start: 'Début nuit', night_end: 'Fin nuit',
+    manual_mode_note: 'Mode manuel actif — choisis le tarif à utiliser pour la course en cours :',
+    prayer_label: '🕌 Rappels de prière', prayer_sub: '10 min avant chaque prière',
+    prayer_wilaya: 'Wilaya', prayer_wilaya_sub: 'Utilisée pour calculer les horaires',
+    dark_mode_label: '🌗 Mode sombre', dark_mode_sub: 'Fond bleu nuit', account: 'Compte',
+    depart: 'Départ', arrivee: 'Arrivée',
+    client_singular: 'client', client_plural: 'clients', course_singular: 'course', course_plural: 'courses',
+    toast_min_client: '⚠️ Renseigne au moins un client', toast_course_saved: '✓ Course enregistrée :',
+    toast_course_cancelled: '↩ Course annulée :', confirm_clear_history: "Effacer tout l'historique des courses ? Cette action est irréversible.",
+    toast_no_export: 'Aucune course à exporter pour cette période', toast_popup_blocked: 'Autorise les pop-ups pour exporter le PDF',
+    toast_notif_on: '✓ Rappels activés', toast_notif_denied: 'Notifications refusées — active-les dans les paramètres Chrome',
+    toast_notif_unsupported: 'Notifications non supportées sur ce navigateur',
+    pdf_report_title: 'TaxiCost — Rapport', pdf_day_of: 'Journée du', pdf_week_of: 'Semaine du',
+    pdf_hour: 'Heure', pdf_day: 'Jour', pdf_clients: 'Clients', pdf_amount: 'Montant', pdf_courses: 'Courses',
+    pdf_detail: 'Détail des courses', pdf_nb_courses: 'Nombre de courses', pdf_nb_clients: 'Nombre de clients',
+    pdf_gross: 'Revenu brut', pdf_fuel: 'Essence', pdf_net: 'Revenu net', pdf_generated: 'Généré par TaxiCost le',
+    expired_since: 'Expirée depuis', expires_in: 'Expire dans', valid_until: "Valide jusqu'au",
+    insurance_expires_in: 'Assurance expire dans', insurance_expired_notif: 'Assurance expirée !',
+    oil_expires_in: 'Vidange à prévoir dans', oil_late: 'Vidange en retard !',
+    day_word: 'jour', days_word: 'jours', expires_today: "expire AUJOURD'HUI !", reminder_title: 'TaxiCost — Rappel',
+    day_names: ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'],
+    month_names: ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre']
+  },
+  ar: {
+    nav_course: 'كورسة', nav_stats: 'إحصائيات', nav_history: 'تاريخ', nav_maint: 'صيانة', nav_settings: 'إعدادات',
+    title_stats: 'الإحصائيات', title_history: 'التاريخ', title_maint: 'الصيانة', title_settings: 'الإعدادات',
+    trial_label: '🎁 تجربة مجانية',
+    period_day: 'يوم', period_week: 'أسبوع', period_month: 'شهر',
+    login_subtitle: 'سجل الدخول للمتابعة', ph_email: 'البريد الإلكتروني', ph_password: 'كلمة المرور',
+    login_btn: 'تسجيل الدخول', forgot_link: 'نسيت كلمة المرور؟', to_register: 'ما عندكش حساب؟ سجل',
+    forgot_title: 'نسيت كلمة المرور', forgot_subtitle: 'دخل الإيميل ديالك، نبعتولك رابط باش تبدلها.',
+    send_link: 'ابعث الرابط', back_to_login: 'رجوع لتسجيل الدخول',
+    register_title: 'إنشاء حساب', register_subtitle: 'تسجيل مجاني · اشتراك 500 دج/شهر',
+    ph_name: 'الاسم', ph_password_hint: 'كلمة المرور (6 خانات على الأقل)',
+    register_btn: 'سجل', to_login: 'عندك حساب؟ سجل الدخول',
+    pending_title: 'الحساب في الانتظار',
+    pending_msg1: 'تم إنشاء حسابك!',
+    pending_msg2: 'اختر الصيغة، ابعث المبلغ عبر CCP أو تحويل بنكي مع ذكر الرجعة ديالك',
+    pending_msg3: 'وبعدها تواصل معنا عبر واتساب.',
+    plan_monthly: '📅 شهر — 500 دج', plan_yearly: '🗓️ عام كامل — 5000 دج',
+    pending_note: 'بمجرد تأكيد الدفع، سيتم تفعيل حسابك خلال 24 ساعة.', logout: 'تسجيل الخروج',
+    expired_title: 'انتهت التجربة',
+    expired_msg1: 'انتهت تجربتك المجانية أو اشتراكك.',
+    expired_note: 'بمجرد تأكيد الدفع، سيتم استعادة حسابك خلال 24 ساعة.',
+    current_course: 'الكورسة الحالية', voice_hint: '🎤 لنطق رقم', new_client: 'زبون جديد',
+    total_course: 'مجموع الكورسة', end_course: '✓ إنهاء الكورسة', cancel_clear: 'إلغاء / تفريغ',
+    revenue_gross: 'الربح الخام', revenue_gross_day: 'الربح الخام لليوم', revenue_gross_week: 'الربح الخام للأسبوع', revenue_gross_month: 'الربح الخام للشهر', courses_label: 'الكورسات', clients_label: 'الزبائن',
+    fuel: 'الأسانس', fuel_sub_day: 'تكلفة اليوم', fuel_sub_week: 'تكلفة الأسبوع', fuel_sub_month: 'تكلفة الشهر',
+    revenue_net: 'الربح الصافي', net_sub: 'الخام − الأسانس', net_sub_day: 'الخام − الأسانس (اليوم)',
+    net_sub_week: 'الخام − الأسانس (الأسبوع)', net_sub_month: 'الخام − الأسانس (الشهر)',
+    chart_hourly: 'الأرباح حسب الساعة', chart_daily_week: 'الأرباح حسب اليوم (الأسبوع)', chart_daily_month: 'الأرباح حسب اليوم (الشهر)',
+    export_pdf: 'تصدير PDF',
+    undo_last: '↩ إلغاء آخر كورسة', history_today: 'كورسات اليوم',
+    history_week: 'التفاصيل حسب اليوم (الأسبوع)', history_month: 'التفاصيل حسب اليوم (الشهر)',
+    no_course_yet: 'ما كاين حتى كورسة لحد الآن', clear_history: 'تصفير كل التاريخ',
+    enable_reminders: '🔔 فعّل التذكيرات على الهاتف', reminders_on: '🔔 التذكيرات مفعّلة',
+    insurance: 'التأمين', not_set: 'غير محدد', payment_date: 'تاريخ الخلاص',
+    duration_months: 'المدة (أشهر)', oil_change: 'الفيدانج', oil_change_date: 'تاريخ الفيدانج',
+    app_language: 'لغة التطبيق', auto_tarif: 'التسعيرة التلقائية', day_short: 'نهار', night_short: 'ليل',
+    tarif_day: 'تسعيرة النهار', fixed_amount: 'مبلغ ثابت', tarif_night: 'تسعيرة الليل',
+    night_start: 'بداية الليل', night_end: 'نهاية الليل',
+    manual_mode_note: 'الوضع اليدوي مفعّل — اختر التسعيرة لهاد الكورسة:',
+    prayer_label: '🕌 تذكير الصلاة', prayer_sub: '10 دقايق قبل كل صلاة',
+    prayer_wilaya: 'الولاية', prayer_wilaya_sub: 'تستعمل لحساب أوقات الصلاة',
+    dark_mode_label: '🌗 الوضع الليلي', dark_mode_sub: 'خلفية كحلة', account: 'الحساب',
+    depart: 'انطلاق', arrivee: 'وصول',
+    client_singular: 'زبون', client_plural: 'زبائن', course_singular: 'كورسة', course_plural: 'كورسات',
+    toast_min_client: '⚠️ دخل على الأقل زبون واحد', toast_course_saved: '✓ تسجلت الكورسة:',
+    toast_course_cancelled: '↩ تلغات الكورسة:', confirm_clear_history: 'تصفية كل تاريخ الكورسات؟ هاد العملية ما ترجعش.',
+    toast_no_export: 'ما كاين حتى كورسة نصدرها لهاد المدة', toast_popup_blocked: 'خلي المتصفح يفتح نافذة منبثقة باش تصدر PDF',
+    toast_notif_on: '✓ التذكيرات مفعّلة', toast_notif_denied: 'رفضت التنبيهات — فعّلها من إعدادات المتصفح',
+    toast_notif_unsupported: 'التنبيهات ما تخدمش فهاد المتصفح',
+    pdf_report_title: 'TaxiCost — التقرير', pdf_day_of: 'يوم', pdf_week_of: 'أسبوع',
+    pdf_hour: 'الساعة', pdf_day: 'اليوم', pdf_clients: 'الزبائن', pdf_amount: 'المبلغ', pdf_courses: 'الكورسات',
+    pdf_detail: 'تفاصيل الكورسات', pdf_nb_courses: 'عدد الكورسات', pdf_nb_clients: 'عدد الزبائن',
+    pdf_gross: 'الربح الخام', pdf_fuel: 'الأسانس', pdf_net: 'الربح الصافي', pdf_generated: 'أنشأه TaxiCost في',
+    expired_since: 'منتهية من', expires_in: 'تنتهي في', valid_until: 'صالحة حتى',
+    insurance_expires_in: 'التأمين ينتهي في', insurance_expired_notif: 'التأمين منتهي!',
+    oil_expires_in: 'الفيدانج قريب في', oil_late: 'الفيدانج متأخر!',
+    day_word: 'يوم', days_word: 'أيام', expires_today: 'تنتهي اليوم!', reminder_title: 'TaxiCost — تذكير',
+    day_names: ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'],
+    month_names: ['جانفي','فيفري','مارس','أفريل','ماي','جوان','جويلية','أوت','سبتمبر','أكتوبر','نوفمبر','ديسمبر']
+  }
+};
+
+function getUiLang() {
+  return (appData.settings && appData.settings.uiLang) || 'fr';
+}
+
+function t(key) {
+  var lang = getUiLang();
+  var dict = I18N[lang] || I18N.fr;
+  return dict[key] !== undefined ? dict[key] : (I18N.fr[key] !== undefined ? I18N.fr[key] : key);
+}
+
+function applyTranslations() {
+  var lang = getUiLang();
+  document.documentElement.setAttribute('lang', lang);
+  document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+
+  document.querySelectorAll('[data-i18n]').forEach(function(el) {
+    el.textContent = t(el.getAttribute('data-i18n'));
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el) {
+    el.setAttribute('placeholder', t(el.getAttribute('data-i18n-placeholder')));
+  });
+
+  document.getElementById('lang-fr').className = 'lang-btn' + (lang === 'fr' ? ' active' : '');
+  document.getElementById('lang-ar').className = 'lang-btn' + (lang === 'ar' ? ' active' : '');
+
+  updateAuthMessages();
+  updateRefLabels();
+
+  // Rafraîchit les libellés de la liste des wilayas et les parties générées en JS
+  var sel = document.getElementById('prayer-wilaya-select');
+  if (sel) { sel.innerHTML = ''; populateWilayaSelect(); }
+
+  render();
+  if (document.getElementById('s-stats').classList.contains('active')) renderStats();
+  if (document.getElementById('s-history').classList.contains('active')) renderHistory();
+  updateTotal();
+}
+
+function updateAuthMessages() {
+  var pEl = document.getElementById('pending-msg-text');
+  if (pEl) {
+    pEl.innerHTML = t('pending_msg1') + '<br><br>' + t('pending_msg2') + ' <strong id="ref-pending">...</strong>، ' + t('pending_msg3');
+  }
+  var eEl = document.getElementById('expired-msg-text');
+  if (eEl) {
+    eEl.innerHTML = t('expired_msg1') + '<br><br>' + t('pending_msg2') + ' <strong id="ref-expired">...</strong>، ' + t('pending_msg3');
+  }
+}
+
+function setUiLang(lang) {
+  appData.settings.uiLang = lang;
+  currentLang = lang === 'ar' ? 'ar-DZ' : 'fr-FR';
+  persistAppData();
+  applyTranslations();
+}
+
 var clients = [];
 var cid = 0;
 var currentLang = 'fr-FR';
@@ -338,15 +548,8 @@ function goTab(id, btn, fromPill) {
 }
 
 // ===== LANGUE =====
-function setLang(lang) {
-  currentLang = lang === 'ar' ? 'ar-DZ' : 'fr-FR';
-  appData.settings.lang = lang;
-  persistAppData();
-  document.getElementById('lang-fr').className = 'lang-btn' + (lang === 'fr' ? ' active' : '');
-  document.getElementById('lang-ar').className = 'lang-btn' + (lang === 'ar' ? ' active' : '');
-  var hint = document.getElementById('voice-hint');
-  if (hint) hint.textContent = lang === 'ar' ? '🎤 للنطق' : '🎤 pour dicter un chiffre';
-}
+// (gérée par setUiLang() / applyTranslations(), voir en haut du fichier)
+
 
 // ===== WELCOME / DRIVER NAME (sauvegarde auto) =====
 function updateName() {
@@ -440,12 +643,30 @@ function loadSettingsIntoInputs() {
   updateHoursSummary();
   toggleManualNote();
 
-  var savedLang = appData.settings.lang || 'fr';
+  var savedLang = getUiLang();
   document.getElementById('lang-fr').className = 'lang-btn' + (savedLang === 'fr' ? ' active' : '');
   document.getElementById('lang-ar').className = 'lang-btn' + (savedLang === 'ar' ? ' active' : '');
 
   var prayerToggle = document.getElementById('prayer-notif-toggle');
   if (prayerToggle) prayerToggle.checked = isPrayerNotifEnabled();
+
+  populateWilayaSelect();
+
+  var darkToggle = document.getElementById('dark-mode-toggle');
+  if (darkToggle) darkToggle.checked = isDarkMode();
+}
+
+function populateWilayaSelect() {
+  var sel = document.getElementById('prayer-wilaya-select');
+  if (!sel) return;
+  var current = getPrayerWilaya();
+  var uiLang = getUiLang();
+  if (sel.options.length === 0) {
+    sel.innerHTML = WILAYAS.map(function(w) {
+      return '<option value="' + w.fr + '">' + (uiLang === 'ar' ? w.ar : w.fr) + '</option>';
+    }).join('');
+  }
+  sel.value = current;
 }
 
 function updateHoursSummary() {
@@ -763,10 +984,10 @@ function startVoice(clientId, field, isRetry) {
 }
 
 function showToast(msg) {
-  var t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(function(){ t.classList.remove('show'); }, 2000);
+  var toastEl = document.getElementById('toast');
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  setTimeout(function(){ toastEl.classList.remove('show'); }, 2000);
 }
 function micIcon() {
   return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>';
@@ -782,12 +1003,12 @@ function render() {
       '<div class="cell-num">' + c.id + '</div>' +
       '<div class="cell-group">' +
         '<div class="cell-field-row">' +
-          '<span class="cell-field-label">Départ</span>' +
+          '<span class="cell-field-label">' + t('depart') + '</span>' +
           '<input class="cell-input" id="input-' + c.id + '-depart" type="number" inputmode="numeric" placeholder="0" value="' + c.depart + '" oninput="onDepart(' + c.id + ',this.value)" min="0">' +
           '<button class="mic-btn" id="mic-' + c.id + '-depart" onclick="startVoice(' + c.id + ',\'depart\')">' + micIcon() + '</button>' +
         '</div>' +
         '<div class="cell-field-row">' +
-          '<span class="cell-field-label">Arrivée</span>' +
+          '<span class="cell-field-label">' + t('arrivee') + '</span>' +
           '<input class="cell-input" id="input-' + c.id + '-arrivee" type="number" inputmode="numeric" placeholder="0" value="' + c.arrivee + '" oninput="onArrivee(' + c.id + ',this.value)" min="0">' +
           '<button class="mic-btn" id="mic-' + c.id + '-arrivee" onclick="startVoice(' + c.id + ',\'arrivee\')">' + micIcon() + '</button>' +
         '</div>' +
@@ -823,7 +1044,7 @@ function endCourse() {
     var cost = calcCost(c);
     if (cost !== null) { total += cost; nbClients++; }
   });
-  if (nbClients === 0) { showToast('⚠️ Renseigne au moins un client'); return; }
+  if (nbClients === 0) { showToast(t('toast_min_client')); return; }
 
   if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
   playBeep();
@@ -832,7 +1053,7 @@ function endCourse() {
   courses.push({ ts: Date.now(), total: total, nbClients: nbClients });
   saveCourses(courses);
 
-  showToast('✓ Course enregistrée : ' + total + ' DA');
+  showToast(t('toast_course_saved') + ' ' + total + ' DA');
   resetAll();
   setTimeout(function(){
     var statsBtn = document.querySelector('#s-main .bottom-nav .nav-btn:nth-child(2)');
@@ -859,12 +1080,12 @@ function undoLast() {
   if (courses.length === 0) return;
   var removed = courses.pop();
   saveCourses(courses);
-  showToast('↩ Course annulée : ' + removed.total + ' DA');
+  showToast(t('toast_course_cancelled') + ' ' + removed.total + ' DA');
   renderHistory();
 }
 
 function clearStats() {
-  if (confirm("Effacer tout l'historique des courses ? Cette action est irréversible.")) {
+  if (confirm(t('confirm_clear_history'))) {
     appData.courses = [];
     persistAppData();
     renderHistory();
@@ -879,15 +1100,17 @@ function exportPDF() {
   var now = new Date();
   var from;
   var periodLabel;
+  var lang = getUiLang();
+  var isAr = lang === 'ar';
 
-  if (currentPeriod === 'day') { from = startOfDay(now); periodLabel = 'Journée du ' + now.getDate() + ' ' + MONTH_NAMES[now.getMonth()] + ' ' + now.getFullYear(); }
-  else if (currentPeriod === 'week') { from = startOfWeek(now); periodLabel = 'Semaine du ' + from.getDate() + ' ' + MONTH_NAMES[from.getMonth()] + ' ' + now.getFullYear(); }
-  else { from = startOfMonth(now); periodLabel = capitalize(MONTH_NAMES[now.getMonth()]) + ' ' + now.getFullYear(); }
+  if (currentPeriod === 'day') { from = startOfDay(now); periodLabel = t('pdf_day_of') + ' ' + now.getDate() + ' ' + MONTH_NAMES()[now.getMonth()] + ' ' + now.getFullYear(); }
+  else if (currentPeriod === 'week') { from = startOfWeek(now); periodLabel = t('pdf_week_of') + ' ' + from.getDate() + ' ' + MONTH_NAMES()[from.getMonth()] + ' ' + now.getFullYear(); }
+  else { from = startOfMonth(now); periodLabel = capitalize(MONTH_NAMES()[now.getMonth()]) + ' ' + now.getFullYear(); }
 
   var filtered = courses.filter(function(c){ return c.ts >= from.getTime(); }).sort(function(a,b){ return a.ts - b.ts; });
 
   if (filtered.length === 0) {
-    showToast('Aucune course à exporter pour cette période');
+    showToast(t('toast_no_export'));
     return;
   }
 
@@ -899,7 +1122,7 @@ function exportPDF() {
 
   var rowsHtml = '';
   if (currentPeriod === 'day') {
-    rowsHtml = '<table><thead><tr><th>Heure</th><th>Clients</th><th>Montant</th></tr></thead><tbody>';
+    rowsHtml = '<table><thead><tr><th>' + t('pdf_hour') + '</th><th>' + t('pdf_clients') + '</th><th>' + t('pdf_amount') + '</th></tr></thead><tbody>';
     filtered.forEach(function(c){
       var d = new Date(c.ts);
       var time = ('0'+d.getHours()).slice(-2) + ':' + ('0'+d.getMinutes()).slice(-2);
@@ -917,17 +1140,21 @@ function exportPDF() {
       byDay[k].clients += c.nbClients;
     });
     var days = Object.keys(byDay).map(function(k){ return byDay[k]; }).sort(function(a,b){ return a.date - b.date; });
-    rowsHtml = '<table><thead><tr><th>Jour</th><th>Courses</th><th>Clients</th><th>Montant</th></tr></thead><tbody>';
+    rowsHtml = '<table><thead><tr><th>' + t('pdf_day') + '</th><th>' + t('pdf_courses') + '</th><th>' + t('pdf_clients') + '</th><th>' + t('pdf_amount') + '</th></tr></thead><tbody>';
     days.forEach(function(d){
-      var dname = capitalize(DAY_NAMES[d.date.getDay()]);
+      var dname = capitalize(DAY_NAMES()[d.date.getDay()]);
       rowsHtml += '<tr><td>' + dname + ' ' + d.date.getDate() + '</td><td>' + d.courses + '</td><td>' + d.clients + '</td><td>' + d.total + ' DA</td></tr>';
     });
     rowsHtml += '</tbody></table>';
   }
 
+  var dirAttr = isAr ? ' dir="rtl"' : '';
+  var textAlign = isAr ? 'right' : 'left';
+  var dateLocale = isAr ? 'ar-DZ' : 'fr-FR';
+
   var fullHtml =
-    '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">' +
-    '<title>TaxiCost — Rapport</title>' +
+    '<!DOCTYPE html><html lang="' + lang + '"' + dirAttr + '><head><meta charset="UTF-8">' +
+    '<title>' + t('pdf_report_title') + '</title>' +
     '<style>' +
       'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1a1a2e;padding:24px;margin:0;}' +
       '.pr-header{display:flex;align-items:center;gap:14px;border-bottom:3px solid #FFC107;padding-bottom:16px;margin-bottom:20px;}' +
@@ -936,7 +1163,7 @@ function exportPDF() {
       '.pr-sub{font-size:13px;color:#888;margin-top:2px;}' +
       '.pr-section-title{font-size:14px;font-weight:700;margin:18px 0 8px;}' +
       'table{width:100%;border-collapse:collapse;font-size:13px;}' +
-      'th{text-align:left;background:#FFF4D6;padding:8px 10px;font-weight:700;}' +
+      'th{text-align:' + textAlign + ';background:#FFF4D6;padding:8px 10px;font-weight:700;}' +
       'td{padding:8px 10px;border-bottom:1px solid #f0e8d0;}' +
       '.pr-totals{margin-top:16px;background:#1a1a2e;color:#fff;border-radius:10px;padding:16px 20px;}' +
       '.pr-totals-row{display:flex;justify-content:space-between;padding:4px 0;font-size:14px;}' +
@@ -954,24 +1181,24 @@ function exportPDF() {
         '<rect x="22" y="14" width="18" height="11" rx="3" fill="#FFC107"/><rect x="44" y="14" width="18" height="11" rx="3" fill="#FFC107"/>' +
         '<rect x="33" y="0" width="18" height="8" rx="2" fill="#FFC107"/>' +
       '</svg></div>' +
-      '<div><div class="pr-title">TaxiCost — Rapport</div><div class="pr-sub">' + driverName + ' · ' + periodLabel + '</div></div>' +
+      '<div><div class="pr-title">' + t('pdf_report_title') + '</div><div class="pr-sub">' + driverName + ' · ' + periodLabel + '</div></div>' +
     '</div>' +
-    '<div class="pr-section-title">Détail des courses</div>' +
+    '<div class="pr-section-title">' + t('pdf_detail') + '</div>' +
     rowsHtml +
     '<div class="pr-totals">' +
-      '<div class="pr-totals-row"><span>Nombre de courses</span><span>' + filtered.length + '</span></div>' +
-      '<div class="pr-totals-row"><span>Nombre de clients</span><span>' + totalClients + '</span></div>' +
-      '<div class="pr-totals-row"><span>Revenu brut</span><span>' + totalRevenue + ' DA</span></div>' +
-      '<div class="pr-totals-row"><span>Essence</span><span>− ' + fuel + ' DA</span></div>' +
-      '<div class="pr-totals-row main"><span>Revenu net</span><span>' + net + ' DA</span></div>' +
+      '<div class="pr-totals-row"><span>' + t('pdf_nb_courses') + '</span><span>' + filtered.length + '</span></div>' +
+      '<div class="pr-totals-row"><span>' + t('pdf_nb_clients') + '</span><span>' + totalClients + '</span></div>' +
+      '<div class="pr-totals-row"><span>' + t('pdf_gross') + '</span><span>' + totalRevenue + ' DA</span></div>' +
+      '<div class="pr-totals-row"><span>' + t('pdf_fuel') + '</span><span>− ' + fuel + ' DA</span></div>' +
+      '<div class="pr-totals-row main"><span>' + t('pdf_net') + '</span><span>' + net + ' DA</span></div>' +
     '</div>' +
-    '<div class="pr-footer">Généré par TaxiCost le ' + now.toLocaleDateString('fr-FR') + ' à ' + ('0'+now.getHours()).slice(-2) + ':' + ('0'+now.getMinutes()).slice(-2) + '</div>' +
+    '<div class="pr-footer">' + t('pdf_generated') + ' ' + now.toLocaleDateString(dateLocale) + ' ' + (isAr ? '' : 'à ') + ('0'+now.getHours()).slice(-2) + ':' + ('0'+now.getMinutes()).slice(-2) + '</div>' +
     '<script>window.onload = function(){ setTimeout(function(){ window.print(); }, 250); };<\/script>' +
     '</body></html>';
 
   var printWindow = window.open('', '_blank');
   if (!printWindow) {
-    showToast('Autorise les pop-ups pour exporter le PDF');
+    showToast(t('toast_popup_blocked'));
     return;
   }
   printWindow.document.open();
@@ -982,8 +1209,8 @@ function exportPDF() {
 // ===========================================================
 // ===== DATES =====
 // ===========================================================
-var DAY_NAMES = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
-var MONTH_NAMES = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+function DAY_NAMES() { return t('day_names'); }
+function MONTH_NAMES() { return t('month_names'); }
 
 function startOfDay(d){ var x=new Date(d); x.setHours(0,0,0,0); return x; }
 function startOfWeek(d){ var x=startOfDay(d); var day=x.getDay(); var diff=(day===0?6:day-1); x.setDate(x.getDate()-diff); return x; }
@@ -1034,9 +1261,9 @@ function renderStats() {
   var now = new Date();
   var from, label, fuelSubLabel, netSubLabel;
 
-  if (currentPeriod === 'day') { from = startOfDay(now); label='Revenu brut du jour'; fuelSubLabel='Coût du jour'; netSubLabel='Brut − essence (jour)'; }
-  else if (currentPeriod === 'week') { from = startOfWeek(now); label='Revenu brut de la semaine'; fuelSubLabel='Coût de la semaine'; netSubLabel='Brut − essence (semaine)'; }
-  else { from = startOfMonth(now); label='Revenu brut du mois'; fuelSubLabel='Coût du mois'; netSubLabel='Brut − essence (mois)'; }
+  if (currentPeriod === 'day') { from = startOfDay(now); label = t('revenue_gross_day'); fuelSubLabel = t('fuel_sub_day'); netSubLabel = t('net_sub_day'); }
+  else if (currentPeriod === 'week') { from = startOfWeek(now); label = t('revenue_gross_week'); fuelSubLabel = t('fuel_sub_week'); netSubLabel = t('net_sub_week'); }
+  else { from = startOfMonth(now); label = t('revenue_gross_month'); fuelSubLabel = t('fuel_sub_month'); netSubLabel = t('net_sub_month'); }
 
   var filtered = courses.filter(function(c){ return c.ts >= from.getTime(); });
   var totalRevenue = 0, totalClients = 0;
@@ -1052,13 +1279,13 @@ function renderStats() {
   updateNet();
 
   document.getElementById('stat-date').textContent =
-    capitalize(DAY_NAMES[now.getDay()]) + ' ' + now.getDate() + ' ' + MONTH_NAMES[now.getMonth()] + ' ' + now.getFullYear();
+    capitalize(DAY_NAMES()[now.getDay()]) + ' ' + now.getDate() + ' ' + MONTH_NAMES()[now.getMonth()] + ' ' + now.getFullYear();
 
   var chartTitle = document.getElementById('chart-title');
   var chartSvg = document.getElementById('chart-svg');
 
   if (currentPeriod === 'day') {
-    chartTitle.textContent = 'Revenus par heure';
+    chartTitle.textContent = t('chart_hourly');
     drawChart(chartSvg, hourlyBuckets(filtered));
   } else {
     var byDay = {};
@@ -1069,7 +1296,7 @@ function renderStats() {
       byDay[k].total += c.total;
     });
     var days = Object.keys(byDay).map(function(k){ return byDay[k]; });
-    chartTitle.textContent = currentPeriod === 'week' ? 'Revenus par jour (semaine)' : 'Revenus par jour (mois)';
+    chartTitle.textContent = currentPeriod === 'week' ? t('chart_daily_week') : t('chart_daily_month');
     drawChart(chartSvg, dailyBuckets(days, currentPeriod, now));
   }
 }
@@ -1081,6 +1308,15 @@ function setHistoryPeriod(p) {
   currentHistoryPeriod = p;
   ['day','week','month'].forEach(function(k){ document.getElementById('hperiod-'+k).classList.toggle('active', k===p); });
   renderHistory();
+}
+
+function clientsLabel(count) {
+  if (getUiLang() === 'ar') return count + ' ' + t('client_plural');
+  return count + ' ' + t('client_singular') + (count > 1 ? 's' : '');
+}
+function coursesLabel(count) {
+  if (getUiLang() === 'ar') return count + ' ' + t('course_plural');
+  return count + ' ' + t('course_singular') + (count > 1 ? 's' : '');
 }
 
 function renderHistory() {
@@ -1100,21 +1336,21 @@ function renderHistory() {
   var listEl = document.getElementById('history-list');
 
   if (currentHistoryPeriod === 'day') {
-    historyTitleEl.textContent = 'Courses du jour';
+    historyTitleEl.textContent = t('history_today');
     if (filtered.length === 0) {
-      listEl.innerHTML = '<div class="history-empty">Aucune course pour le moment</div>';
+      listEl.innerHTML = '<div class="history-empty">' + t('no_course_yet') + '</div>';
     } else {
       listEl.innerHTML = filtered.slice().reverse().map(function(c){
         var d = new Date(c.ts);
         var time = ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
         return '<div class="history-item">' +
-          '<div><div class="history-time">'+time+'</div><div class="history-clients">'+c.nbClients+' client'+(c.nbClients>1?'s':'')+'</div></div>' +
+          '<div><div class="history-time">'+time+'</div><div class="history-clients">'+clientsLabel(c.nbClients)+'</div></div>' +
           '<div class="history-amount">'+c.total+' DA</div>' +
         '</div>';
       }).join('');
     }
   } else {
-    historyTitleEl.textContent = currentHistoryPeriod === 'week' ? 'Détail par jour (semaine)' : 'Détail par jour (mois)';
+    historyTitleEl.textContent = currentHistoryPeriod === 'week' ? t('history_week') : t('history_month');
     var byDay = {};
     filtered.forEach(function(c){
       var d = new Date(c.ts);
@@ -1126,15 +1362,15 @@ function renderHistory() {
     });
     var days = Object.keys(byDay).map(function(k){ return byDay[k]; }).sort(function(a,b){ return b.date - a.date; });
     if (days.length === 0) {
-      listEl.innerHTML = '<div class="history-empty">Aucune course pour le moment</div>';
+      listEl.innerHTML = '<div class="history-empty">' + t('no_course_yet') + '</div>';
     } else {
       listEl.innerHTML = days.map(function(d){
-        var dname = DAY_NAMES[d.date.getDay()].slice(0,3);
+        var dname = DAY_NAMES()[d.date.getDay()].slice(0,3);
         return '<div class="day-card">' +
           '<div class="day-badge"><div class="dnum">'+d.date.getDate()+'</div><div class="dname">'+dname+'</div></div>' +
           '<div class="day-info">' +
-            '<div class="dcourses">'+d.courses+' course'+(d.courses>1?'s':'')+'</div>' +
-            '<div class="dclients">'+d.clients+' client'+(d.clients>1?'s':'')+'</div>' +
+            '<div class="dcourses">'+coursesLabel(d.courses)+'</div>' +
+            '<div class="dclients">'+clientsLabel(d.clients)+'</div>' +
           '</div>' +
           '<div class="day-amount">'+d.total+' DA</div>' +
         '</div>';
@@ -1183,7 +1419,7 @@ function dailyBuckets(days, period, refDate) {
   }
 
   var labels = allDays.map(function(d){
-    return period === 'week' ? DAY_NAMES[d.date.getDay()].slice(0,3) : String(d.date.getDate());
+    return period === 'week' ? DAY_NAMES()[d.date.getDay()].slice(0,3) : String(d.date.getDate());
   });
   var values = allDays.map(function(d){ return d.total; });
   return { labels: labels, values: values };
@@ -1259,6 +1495,11 @@ function daysUntil(date) {
   return Math.round((target - now) / 86400000);
 }
 
+function daysLabel(n) {
+  if (getUiLang() === 'ar') return n + ' ' + t('days_word');
+  return n + ' ' + t('day_word') + (n > 1 ? 's' : '');
+}
+
 function renderMaintenanceCard(prefix) {
   var data = loadMaintenance();
   var dateVal = data[prefix + 'Date'];
@@ -1268,23 +1509,23 @@ function renderMaintenanceCard(prefix) {
   if (!card || !statusEl) return;
 
   if (!dateVal || !durationVal) {
-    statusEl.textContent = 'Non renseignée';
+    statusEl.textContent = t('not_set');
     card.classList.remove('alert');
     return;
   }
 
   var expiry = computeExpiry(dateVal, durationVal);
   var days = daysUntil(expiry);
-  var expiryStr = expiry.getDate() + ' ' + MONTH_NAMES[expiry.getMonth()] + ' ' + expiry.getFullYear();
+  var expiryStr = expiry.getDate() + ' ' + MONTH_NAMES()[expiry.getMonth()] + ' ' + expiry.getFullYear();
 
   if (days < 0) {
-    statusEl.textContent = '⚠️ Expirée depuis ' + Math.abs(days) + ' jour' + (Math.abs(days) > 1 ? 's' : '');
+    statusEl.textContent = '⚠️ ' + t('expired_since') + ' ' + daysLabel(Math.abs(days));
     card.classList.add('alert');
   } else if (days <= 7) {
-    statusEl.textContent = '⚠️ Expire dans ' + days + ' jour' + (days > 1 ? 's' : '') + ' (' + expiryStr + ')';
+    statusEl.textContent = '⚠️ ' + t('expires_in') + ' ' + daysLabel(days) + ' (' + expiryStr + ')';
     card.classList.add('alert');
   } else {
-    statusEl.textContent = 'Valide jusqu\'au ' + expiryStr;
+    statusEl.textContent = t('valid_until') + ' ' + expiryStr;
     card.classList.remove('alert');
   }
 }
@@ -1301,15 +1542,15 @@ function checkMaintenanceAlerts() {
   var insExpiry = computeExpiry(data.insuranceDate, data.insuranceDuration);
   if (insExpiry) {
     var insDays = daysUntil(insExpiry);
-    if (insDays >= 0 && insDays <= 7) alerts.push('🛡️ Assurance expire dans ' + insDays + ' jour' + (insDays > 1 ? 's' : ''));
-    else if (insDays < 0) alerts.push('🛡️ Assurance expirée !');
+    if (insDays >= 0 && insDays <= 7) alerts.push('🛡️ ' + t('insurance_expires_in') + ' ' + daysLabel(insDays));
+    else if (insDays < 0) alerts.push('🛡️ ' + t('insurance_expired_notif'));
   }
 
   var vidExpiry = computeExpiry(data.vidangeDate, data.vidangeDuration);
   if (vidExpiry) {
     var vidDays = daysUntil(vidExpiry);
-    if (vidDays >= 0 && vidDays <= 7) alerts.push('🛢️ Vidange à prévoir dans ' + vidDays + ' jour' + (vidDays > 1 ? 's' : ''));
-    else if (vidDays < 0) alerts.push('🛢️ Vidange en retard !');
+    if (vidDays >= 0 && vidDays <= 7) alerts.push('🛢️ ' + t('oil_expires_in') + ' ' + daysLabel(vidDays));
+    else if (vidDays < 0) alerts.push('🛢️ ' + t('oil_late'));
   }
 
   if (alerts.length > 0) {
@@ -1328,7 +1569,28 @@ function loadMaintenanceIntoInputs() {
 // ===========================================================
 // ===== NOTIFICATIONS — HORAIRES DE PRIÈRE (Oran, Algérie) =====
 // ===========================================================
-var PRAYER_CITY = 'Oran';
+var WILAYAS = [
+  { fr: 'Adrar', ar: 'أدرار' }, { fr: 'Chlef', ar: 'الشلف' }, { fr: 'Laghouat', ar: 'الأغواط' },
+  { fr: 'Oum El Bouaghi', ar: 'أم البواقي' }, { fr: 'Batna', ar: 'باتنة' }, { fr: 'Béjaïa', ar: 'بجاية' },
+  { fr: 'Biskra', ar: 'بسكرة' }, { fr: 'Béchar', ar: 'بشار' }, { fr: 'Blida', ar: 'البليدة' },
+  { fr: 'Bouira', ar: 'البويرة' }, { fr: 'Tamanrasset', ar: 'تمنراست' }, { fr: 'Tébessa', ar: 'تبسة' },
+  { fr: 'Tlemcen', ar: 'تلمسان' }, { fr: 'Tiaret', ar: 'تيارت' }, { fr: 'Tizi Ouzou', ar: 'تيزي وزو' },
+  { fr: 'Alger', ar: 'الجزائر' }, { fr: 'Djelfa', ar: 'الجلفة' }, { fr: 'Jijel', ar: 'جيجل' },
+  { fr: 'Sétif', ar: 'سطيف' }, { fr: 'Saïda', ar: 'سعيدة' }, { fr: 'Skikda', ar: 'سكيكدة' },
+  { fr: 'Sidi Bel Abbès', ar: 'سيدي بلعباس' }, { fr: 'Annaba', ar: 'عنابة' }, { fr: 'Guelma', ar: 'قالمة' },
+  { fr: 'Constantine', ar: 'قسنطينة' }, { fr: 'Médéa', ar: 'المدية' }, { fr: 'Mostaganem', ar: 'مستغانم' },
+  { fr: "M'Sila", ar: 'المسيلة' }, { fr: 'Mascara', ar: 'معسكر' }, { fr: 'Ouargla', ar: 'ورقلة' },
+  { fr: 'Oran', ar: 'وهران' }, { fr: 'El Bayadh', ar: 'البيض' }, { fr: 'Illizi', ar: 'إليزي' },
+  { fr: 'Bordj Bou Arréridj', ar: 'برج بوعريريج' }, { fr: 'Boumerdès', ar: 'بومرداس' }, { fr: 'El Tarf', ar: 'الطارف' },
+  { fr: 'Tindouf', ar: 'تندوف' }, { fr: 'Tissemsilt', ar: 'تيسمسيلت' }, { fr: 'El Oued', ar: 'الوادي' },
+  { fr: 'Khenchela', ar: 'خنشلة' }, { fr: 'Souk Ahras', ar: 'سوق أهراس' }, { fr: 'Tipaza', ar: 'تيبازة' },
+  { fr: 'Mila', ar: 'ميلة' }, { fr: 'Aïn Defla', ar: 'عين الدفلى' }, { fr: 'Naâma', ar: 'النعامة' },
+  { fr: 'Aïn Témouchent', ar: 'عين تموشنت' }, { fr: 'Ghardaïa', ar: 'غرداية' }, { fr: 'Relizane', ar: 'غليزان' },
+  { fr: 'Timimoun', ar: 'تيميمون' }, { fr: 'Bordj Badji Mokhtar', ar: 'برج باجي مختار' }, { fr: 'Ouled Djellal', ar: 'أولاد جلال' },
+  { fr: 'Béni Abbès', ar: 'بني عباس' }, { fr: 'In Salah', ar: 'عين صالح' }, { fr: 'In Guezzam', ar: 'عين قزام' },
+  { fr: 'Touggourt', ar: 'تقرت' }, { fr: 'Djanet', ar: 'جانت' }, { fr: "El M'Ghair", ar: 'المغير' },
+  { fr: 'El Meniaa', ar: 'المنيعة' }
+];
 var PRAYER_COUNTRY = 'Algeria';
 var PRAYER_METHOD = 3; // Muslim World League (peut différer de quelques minutes du calendrier officiel algérien)
 var PRAYER_ADVANCE_MIN = 10;
@@ -1348,7 +1610,7 @@ function togglePrayerNotif(enabled) {
   persistAppData();
   if (!enabled) { clearPrayerTimeouts(); return; }
 
-  if (!('Notification' in window)) { showToast('Notifications non supportées sur ce navigateur'); return; }
+  if (!('Notification' in window)) { showToast(t('toast_notif_unsupported')); return; }
   if (Notification.permission === 'granted') {
     schedulePrayerNotifications();
   } else {
@@ -1357,35 +1619,49 @@ function togglePrayerNotif(enabled) {
       if (perm === 'granted') {
         schedulePrayerNotifications();
       } else {
-        showToast('Notifications refusées — active-les dans les paramètres du navigateur');
+        showToast(t('toast_notif_denied'));
         appData.settings.prayerEnabled = false;
         persistAppData();
-        var t = document.getElementById('prayer-notif-toggle');
-        if (t) t.checked = false;
+        var toggleEl = document.getElementById('prayer-notif-toggle');
+        if (toggleEl) toggleEl.checked = false;
       }
     });
   }
 }
 
+function getPrayerWilaya() {
+  return appData.settings.prayerWilaya || 'Oran';
+}
+
 function fetchPrayerTimes(callback) {
+  var wilaya = getPrayerWilaya();
   var todayKey = dayKey(new Date());
-  var cached = localStorage.getItem('taxicost_prayer_cache');
+  var cacheKey = 'taxicost_prayer_cache_' + wilaya;
+  var cached = localStorage.getItem(cacheKey);
   if (cached) {
     try {
       var parsed = JSON.parse(cached);
       if (parsed.day === todayKey) { callback(parsed.timings); return; }
     } catch(e) {}
   }
-  var url = 'https://api.aladhan.com/v1/timingsByCity?city=' + encodeURIComponent(PRAYER_CITY) +
+  var url = 'https://api.aladhan.com/v1/timingsByCity?city=' + encodeURIComponent(wilaya) +
     '&country=' + encodeURIComponent(PRAYER_COUNTRY) + '&method=' + PRAYER_METHOD;
   fetch(url).then(function(r){ return r.json(); }).then(function(data) {
     if (data && data.data && data.data.timings) {
-      localStorage.setItem('taxicost_prayer_cache', JSON.stringify({ day: todayKey, timings: data.data.timings }));
+      localStorage.setItem(cacheKey, JSON.stringify({ day: todayKey, timings: data.data.timings }));
       callback(data.data.timings);
     }
   }).catch(function() {
     // Silencieux : pas grave de rater un jour de rappels si l'API est indisponible
   });
+}
+
+function onPrayerWilayaChange(val) {
+  appData.settings.prayerWilaya = val;
+  persistAppData();
+  if (isPrayerNotifEnabled() && Notification.permission === 'granted') {
+    schedulePrayerNotifications();
+  }
 }
 
 function schedulePrayerNotifications() {
@@ -1421,16 +1697,16 @@ function schedulePrayerNotifications() {
 
 function requestNotificationPermission() {
   if (!('Notification' in window)) {
-    showToast('Notifications non supportées sur ce navigateur');
+    showToast(t('toast_notif_unsupported'));
     return;
   }
   Notification.requestPermission().then(function(perm) {
     updateNotifButton();
     if (perm === 'granted') {
-      showToast('✓ Rappels activés');
+      showToast(t('toast_notif_on'));
       scheduleMaintenanceChecks();
     } else {
-      showToast('Notifications refusées — active-les dans les paramètres Chrome');
+      showToast(t('toast_notif_denied'));
     }
   });
 }
@@ -1439,10 +1715,10 @@ function updateNotifButton() {
   var btn = document.getElementById('notif-btn');
   if (!btn || !('Notification' in window)) return;
   if (Notification.permission === 'granted') {
-    btn.textContent = '🔔 Rappels activés';
+    btn.textContent = t('reminders_on');
     btn.classList.add('granted');
   } else {
-    btn.textContent = '🔔 Activer les rappels sur le téléphone';
+    btn.textContent = t('enable_reminders');
     btn.classList.remove('granted');
   }
 }
@@ -1467,8 +1743,8 @@ function scheduleMaintenanceChecks() {
   var data = loadMaintenance();
   var today = dayKey(new Date());
 
-  checkAndNotify('insurance', '🛡️ Assurance', data.insuranceDate, data.insuranceDuration, today);
-  checkAndNotify('vidange', '🛢️ Vidange', data.vidangeDate, data.vidangeDuration, today);
+  checkAndNotify('insurance', '🛡️ ' + t('insurance'), data.insuranceDate, data.insuranceDuration, today);
+  checkAndNotify('vidange', '🛢️ ' + t('oil_change'), data.vidangeDate, data.vidangeDuration, today);
 }
 
 function checkAndNotify(prefix, label, dateStr, duration, today) {
@@ -1482,10 +1758,10 @@ function checkAndNotify(prefix, label, dateStr, duration, today) {
   if (localStorage.getItem(sentKey)) return; // déjà envoyée aujourd'hui pour ce seuil
 
   var msg;
-  if (days === 0) msg = label + ' expire AUJOURD\'HUI !';
-  else msg = label + ' expire dans ' + days + ' jour' + (days > 1 ? 's' : '');
+  if (days === 0) msg = label + ' ' + t('expires_today');
+  else msg = label + ' ' + t('expires_in') + ' ' + daysLabel(days);
 
-  sendNotification('TaxiCost — Rappel', msg, prefix + '-' + days);
+  sendNotification(t('reminder_title'), msg, prefix + '-' + days);
   localStorage.setItem(sentKey, '1');
 }
 
