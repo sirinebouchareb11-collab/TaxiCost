@@ -6,7 +6,8 @@ var FILES = [
   '/app.js',
   '/manifest.json',
   '/icon-192.png',
-  '/icon-512.png'
+  '/icon-512.png',
+  '/icon-180.png'
 ];
 
 self.addEventListener('install', function(e) {
