@@ -59,7 +59,7 @@ function doRegister() {
       return;
     }
     // Sinon, la confirmation par email est requise : on informe clairement l'utilisateur
-    errEl.style.color = '#16a34a';
+    errEl.style.color = '#19B86B';
     errEl.textContent = 'Compte créé ! Vérifie ton email (et les spams), clique sur le lien de confirmation, puis reviens te connecter.';
   });
 }
@@ -71,15 +71,15 @@ function doForgotPassword() {
   errEl.style.color = '';
   errEl.textContent = '';
 
-  if (!email) { errEl.style.color = '#dc2626'; errEl.textContent = 'Entre ton email'; return; }
+  if (!email) { errEl.style.color = '#E5484D'; errEl.textContent = 'Entre ton email'; return; }
 
   supabaseClient.auth.resetPasswordForEmail(email)
     .then(function(res) {
       if (res.error) {
-        errEl.style.color = '#dc2626';
+        errEl.style.color = '#E5484D';
         errEl.textContent = 'Erreur : ' + res.error.message;
       } else {
-        errEl.style.color = '#16a34a';
+        errEl.style.color = '#19B86B';
         errEl.textContent = 'Email envoyé ! Vérifie ta boîte de réception (et les spams).';
       }
     });
@@ -286,7 +286,7 @@ function applyTheme() {
   var dark = isDarkMode();
   document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
   var meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute('content', dark ? '#1a1a2e' : '#FFC107');
+  if (meta) meta.setAttribute('content', dark ? '#0E1024' : '#171A3A');
 }
 function toggleDarkMode(checked) {
   appData.settings.darkMode = checked;
@@ -328,7 +328,7 @@ var I18N = {
   fr: {
     nav_course: 'Course', nav_stats: 'Stats', nav_history: 'Historique', nav_maint: 'Entretien', nav_settings: 'Réglages',
     title_stats: 'Statistiques', title_history: 'Historique', title_maint: 'Entretien', title_settings: 'Réglages',
-    trial_label: '🎁 Essai gratuit',
+    trial_label: 'Essai gratuit',
     period_day: 'Jour', period_week: 'Semaine', period_month: 'Mois',
     login_subtitle: 'Connectez-vous pour continuer', ph_email: 'Email', ph_password: 'Mot de passe',
     login_btn: 'Se connecter', forgot_link: 'Mot de passe oublié ?', to_register: "Pas encore de compte ? S'inscrire",
@@ -341,13 +341,13 @@ var I18N = {
     pending_msg1: 'Votre compte a été créé !',
     pending_msg2: 'Choisis ta formule, envoie le montant par CCP ou virement en indiquant bien ta référence',
     pending_msg3: 'puis contacte-nous sur WhatsApp pour confirmer.',
-    plan_monthly: '📅 1 mois — 500 DA', plan_yearly: '🗓️ 1 an — 5000 DA',
+    plan_monthly: '1 mois — 500 DA', plan_yearly: '1 an — 5000 DA',
     pending_note: 'Une fois votre paiement confirmé, votre accès sera activé sous 24h.', logout: 'Se déconnecter',
     expired_title: 'Essai terminé',
     expired_msg1: 'Ton essai gratuit ou ton abonnement est terminé.',
     expired_note: 'Une fois votre paiement confirmé, votre accès sera rétabli sous 24h.',
-    current_course: 'Course en cours', voice_hint: '🎤 pour dicter un chiffre', new_client: 'Nouveau client',
-    total_course: 'Total course', end_course: '✓ Terminer la course', cancel_clear: 'Annuler / Vider',
+    current_course: 'Course en cours', voice_hint: 'pour dicter un chiffre', new_client: 'Nouveau client',
+    total_course: 'Total course', end_course: 'Terminer la course', cancel_clear: 'Annuler / Vider',
     revenue_gross: 'Revenu brut', revenue_gross_day: 'Revenu brut du jour', revenue_gross_week: 'Revenu brut de la semaine', revenue_gross_month: 'Revenu brut du mois',
     courses_label: 'Courses', clients_label: 'Clients',
     fuel: 'Essence', fuel_sub_day: 'Coût du jour', fuel_sub_week: 'Coût de la semaine', fuel_sub_month: 'Coût du mois',
@@ -355,19 +355,19 @@ var I18N = {
     net_sub_week: 'Brut − essence (semaine)', net_sub_month: 'Brut − essence (mois)',
     chart_hourly: 'Revenus par heure', chart_daily_week: 'Revenus par jour (semaine)', chart_daily_month: 'Revenus par jour (mois)',
     export_pdf: 'Exporter en PDF',
-    undo_last: '↩ Annuler la dernière course', history_today: 'Courses du jour',
+    undo_last: 'Annuler la dernière course', history_today: 'Courses du jour',
     history_week: 'Détail par jour (semaine)', history_month: 'Détail par jour (mois)',
     no_course_yet: 'Aucune course pour le moment', clear_history: "Réinitialiser tout l'historique",
-    enable_reminders: '🔔 Activer les rappels sur le téléphone', reminders_on: '🔔 Rappels activés',
+    enable_reminders: 'Activer les rappels sur le téléphone', reminders_on: 'Rappels activés',
     insurance: 'Assurance', not_set: 'Non renseignée', payment_date: 'Date de paiement',
     duration_months: 'Durée (mois)', oil_change: 'Vidange', oil_change_date: 'Date de la vidange',
     app_language: "Langue de l'app", auto_tarif: 'Tarif automatique', day_short: 'Jour', night_short: 'Nuit',
     tarif_day: 'Tarif jour', fixed_amount: 'Montant fixe', tarif_night: 'Tarif nuit',
     night_start: 'Début nuit', night_end: 'Fin nuit',
     manual_mode_note: 'Mode manuel actif — choisis le tarif à utiliser pour la course en cours :',
-    prayer_label: '🕌 Rappels de prière', prayer_sub: '10 min avant chaque prière',
+    prayer_label: 'Rappels de prière', prayer_sub: '10 min avant chaque prière',
     prayer_wilaya: 'Wilaya', prayer_wilaya_sub: 'Utilisée pour calculer les horaires',
-    dark_mode_label: '🌗 Mode sombre', dark_mode_sub: 'Fond bleu nuit', account: 'Compte',
+    dark_mode_label: 'Mode sombre', dark_mode_sub: 'Fond bleu nuit', account: 'Compte',
     depart: 'Départ', arrivee: 'Arrivée',
     client_singular: 'client', client_plural: 'clients', course_singular: 'course', course_plural: 'courses',
     toast_min_client: '⚠️ Renseigne au moins un client', toast_course_saved: '✓ Course enregistrée :',
@@ -389,7 +389,7 @@ var I18N = {
   ar: {
     nav_course: 'كورسة', nav_stats: 'إحصائيات', nav_history: 'تاريخ', nav_maint: 'صيانة', nav_settings: 'إعدادات',
     title_stats: 'الإحصائيات', title_history: 'التاريخ', title_maint: 'الصيانة', title_settings: 'الإعدادات',
-    trial_label: '🎁 تجربة مجانية',
+    trial_label: 'تجربة مجانية',
     period_day: 'يوم', period_week: 'أسبوع', period_month: 'شهر',
     login_subtitle: 'سجل الدخول للمتابعة', ph_email: 'البريد الإلكتروني', ph_password: 'كلمة المرور',
     login_btn: 'تسجيل الدخول', forgot_link: 'نسيت كلمة المرور؟', to_register: 'ما عندكش حساب؟ سجل',
@@ -402,32 +402,32 @@ var I18N = {
     pending_msg1: 'تم إنشاء حسابك!',
     pending_msg2: 'اختر الصيغة، ابعث المبلغ عبر CCP أو تحويل بنكي مع ذكر الرجعة ديالك',
     pending_msg3: 'وبعدها تواصل معنا عبر واتساب.',
-    plan_monthly: '📅 شهر — 500 دج', plan_yearly: '🗓️ عام كامل — 5000 دج',
+    plan_monthly: 'شهر — 500 دج', plan_yearly: 'عام كامل — 5000 دج',
     pending_note: 'بمجرد تأكيد الدفع، سيتم تفعيل حسابك خلال 24 ساعة.', logout: 'تسجيل الخروج',
     expired_title: 'انتهت التجربة',
     expired_msg1: 'انتهت تجربتك المجانية أو اشتراكك.',
     expired_note: 'بمجرد تأكيد الدفع، سيتم استعادة حسابك خلال 24 ساعة.',
-    current_course: 'الكورسة الحالية', voice_hint: '🎤 لنطق رقم', new_client: 'زبون جديد',
-    total_course: 'مجموع الكورسة', end_course: '✓ إنهاء الكورسة', cancel_clear: 'إلغاء / تفريغ',
+    current_course: 'الكورسة الحالية', voice_hint: 'لنطق رقم', new_client: 'زبون جديد',
+    total_course: 'مجموع الكورسة', end_course: 'إنهاء الكورسة', cancel_clear: 'إلغاء / تفريغ',
     revenue_gross: 'الربح الخام', revenue_gross_day: 'الربح الخام لليوم', revenue_gross_week: 'الربح الخام للأسبوع', revenue_gross_month: 'الربح الخام للشهر', courses_label: 'الكورسات', clients_label: 'الزبائن',
     fuel: 'الأسانس', fuel_sub_day: 'تكلفة اليوم', fuel_sub_week: 'تكلفة الأسبوع', fuel_sub_month: 'تكلفة الشهر',
     revenue_net: 'الربح الصافي', net_sub: 'الخام − الأسانس', net_sub_day: 'الخام − الأسانس (اليوم)',
     net_sub_week: 'الخام − الأسانس (الأسبوع)', net_sub_month: 'الخام − الأسانس (الشهر)',
     chart_hourly: 'الأرباح حسب الساعة', chart_daily_week: 'الأرباح حسب اليوم (الأسبوع)', chart_daily_month: 'الأرباح حسب اليوم (الشهر)',
     export_pdf: 'تصدير PDF',
-    undo_last: '↩ إلغاء آخر كورسة', history_today: 'كورسات اليوم',
+    undo_last: 'إلغاء آخر كورسة', history_today: 'كورسات اليوم',
     history_week: 'التفاصيل حسب اليوم (الأسبوع)', history_month: 'التفاصيل حسب اليوم (الشهر)',
     no_course_yet: 'ما كاين حتى كورسة لحد الآن', clear_history: 'تصفير كل التاريخ',
-    enable_reminders: '🔔 فعّل التذكيرات على الهاتف', reminders_on: '🔔 التذكيرات مفعّلة',
+    enable_reminders: 'فعّل التذكيرات على الهاتف', reminders_on: 'التذكيرات مفعّلة',
     insurance: 'التأمين', not_set: 'غير محدد', payment_date: 'تاريخ الخلاص',
     duration_months: 'المدة (أشهر)', oil_change: 'الفيدانج', oil_change_date: 'تاريخ الفيدانج',
     app_language: 'لغة التطبيق', auto_tarif: 'التسعيرة التلقائية', day_short: 'نهار', night_short: 'ليل',
     tarif_day: 'تسعيرة النهار', fixed_amount: 'مبلغ ثابت', tarif_night: 'تسعيرة الليل',
     night_start: 'بداية الليل', night_end: 'نهاية الليل',
     manual_mode_note: 'الوضع اليدوي مفعّل — اختر التسعيرة لهاد الكورسة:',
-    prayer_label: '🕌 تذكير الصلاة', prayer_sub: '10 دقايق قبل كل صلاة',
+    prayer_label: 'تذكير الصلاة', prayer_sub: '10 دقايق قبل كل صلاة',
     prayer_wilaya: 'الولاية', prayer_wilaya_sub: 'تستعمل لحساب أوقات الصلاة',
-    dark_mode_label: '🌗 الوضع الليلي', dark_mode_sub: 'خلفية كحلة', account: 'الحساب',
+    dark_mode_label: 'الوضع الليلي', dark_mode_sub: 'خلفية كحلة', account: 'الحساب',
     depart: 'انطلاق', arrivee: 'وصول',
     client_singular: 'زبون', client_plural: 'زبائن', course_singular: 'كورسة', course_plural: 'كورسات',
     toast_min_client: '⚠️ دخل على الأقل زبون واحد', toast_course_saved: '✓ تسجلت الكورسة:',
@@ -629,7 +629,7 @@ function updateTarifPill() {
   var info = getActiveModeLabel();
   var iconEl = document.getElementById('tarif-pill-icon');
   var valEl = document.getElementById('tarif-pill-val');
-  if (iconEl) iconEl.textContent = info.icon;
+  if (iconEl) iconEl.innerHTML = '<svg class="i s"><use href="#i-' + (info.mode === 'night' ? 'moon' : 'sun') + '"/></svg>';
   if (valEl) valEl.textContent = getTarif() + ' DA';
 }
 
@@ -796,7 +796,7 @@ function updateTotal() {
   var total = 0;
   clients.forEach(function(c){ var cost = calcCost(c); if (cost !== null) total += cost; });
   var el = document.getElementById('total-val');
-  if (el) el.textContent = total + ' DA';
+  if (el) el.innerHTML = total + '<small>DA</small>';
 }
 
 // ===========================================================
@@ -990,7 +990,7 @@ function showToast(msg) {
   setTimeout(function(){ toastEl.classList.remove('show'); }, 2000);
 }
 function micIcon() {
-  return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>';
+  return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>';
 }
 
 // ===== RENDU CLIENTS =====
@@ -1024,7 +1024,7 @@ function render() {
 function resetAll() {
   clients = []; cid = 0; addClient();
   var el = document.getElementById('total-val');
-  if (el) el.textContent = '0 DA';
+  if (el) el.innerHTML = '0<small>DA</small>';
 }
 
 // ===========================================================
@@ -1156,30 +1156,26 @@ function exportPDF() {
     '<!DOCTYPE html><html lang="' + lang + '"' + dirAttr + '><head><meta charset="UTF-8">' +
     '<title>' + t('pdf_report_title') + '</title>' +
     '<style>' +
-      'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1a1a2e;padding:24px;margin:0;}' +
-      '.pr-header{display:flex;align-items:center;gap:14px;border-bottom:3px solid #FFC107;padding-bottom:16px;margin-bottom:20px;}' +
-      '.pr-logo{width:50px;height:50px;background:#FFC107;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}' +
+      'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#171A3A;padding:24px;margin:0;}' +
+      '.pr-header{display:flex;align-items:center;gap:14px;border-bottom:3px solid #4F6BFF;padding-bottom:16px;margin-bottom:20px;}' +
+      '.pr-logo{width:50px;height:50px;background:#171A3A;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}' +
       '.pr-title{font-size:22px;font-weight:700;}' +
       '.pr-sub{font-size:13px;color:#888;margin-top:2px;}' +
       '.pr-section-title{font-size:14px;font-weight:700;margin:18px 0 8px;}' +
       'table{width:100%;border-collapse:collapse;font-size:13px;}' +
-      'th{text-align:' + textAlign + ';background:#FFF4D6;padding:8px 10px;font-weight:700;}' +
-      'td{padding:8px 10px;border-bottom:1px solid #f0e8d0;}' +
-      '.pr-totals{margin-top:16px;background:#1a1a2e;color:#fff;border-radius:10px;padding:16px 20px;}' +
+      'th{text-align:' + textAlign + ';background:#ECEFFF;padding:8px 10px;font-weight:700;}' +
+      'td{padding:8px 10px;border-bottom:1px solid #E8EAF3;}' +
+      '.pr-totals{margin-top:16px;background:#171A3A;color:#fff;border-radius:18px;padding:16px 20px;}' +
       '.pr-totals-row{display:flex;justify-content:space-between;padding:4px 0;font-size:14px;}' +
-      '.pr-totals-row.main{font-size:20px;font-weight:700;color:#FFC107;border-top:1px solid rgba(255,255,255,0.2);margin-top:8px;padding-top:10px;}' +
+      '.pr-totals-row.main{font-size:20px;font-weight:700;color:#7C8CFF;border-top:1px solid rgba(255,255,255,0.2);margin-top:8px;padding-top:10px;}' +
       '.pr-footer{margin-top:24px;font-size:11px;color:#aaa;text-align:center;}' +
       '@media print { @page { margin: 16mm; } }' +
     '</style></head><body>' +
     '<div class="pr-header">' +
-      '<div class="pr-logo"><svg width="28" height="28" viewBox="0 0 84 70" fill="none">' +
-        '<path d="M14 28 L18 12 Q20 6 27 6 L57 6 Q64 6 66 12 L70 28" fill="#1a1a2e"/>' +
-        '<rect x="4" y="28" width="76" height="22" rx="8" fill="#1a1a2e"/>' +
-        '<rect x="0" y="44" width="84" height="16" rx="6" fill="#1a1a2e"/>' +
-        '<circle cx="16" cy="62" r="8" fill="#FFC107"/><circle cx="16" cy="62" r="3.5" fill="#1a1a2e"/>' +
-        '<circle cx="68" cy="62" r="8" fill="#FFC107"/><circle cx="68" cy="62" r="3.5" fill="#1a1a2e"/>' +
-        '<rect x="22" y="14" width="18" height="11" rx="3" fill="#FFC107"/><rect x="44" y="14" width="18" height="11" rx="3" fill="#FFC107"/>' +
-        '<rect x="33" y="0" width="18" height="8" rx="2" fill="#FFC107"/>' +
+      '<div class="pr-logo"><svg width="30" height="19" viewBox="165 113 190 119" fill="#fff">' +
+        '<defs><mask id="m" maskUnits="userSpaceOnUse" x="160" y="108" width="200" height="130"><rect x="160" y="108" width="200" height="130" fill="#fff"/><circle cx="212" cy="215" r="30"/><circle cx="308" cy="215" r="30"/></mask></defs>' +
+        '<g mask="url(#m)"><path d="M197.4 165A58.5 58.5 0 0 1 313.6 165V168H295.9V160A42 42 0 0 0 215.1 160V168H197.4Z"/><path d="M190 160H330A25 25 0 0 1 355 185V202A12 12 0 0 1 343 214H177A12 12 0 0 1 165 202V185A25 25 0 0 1 190 160Z"/></g>' +
+        '<circle cx="212" cy="215" r="17"/><circle cx="308" cy="215" r="17"/>' +
       '</svg></div>' +
       '<div><div class="pr-title">' + t('pdf_report_title') + '</div><div class="pr-sub">' + driverName + ' · ' + periodLabel + '</div></div>' +
     '</div>' +
@@ -1250,7 +1246,7 @@ function loadFuel() {
 function updateNet() {
   var revenue = parseInt(document.getElementById('stat-revenue').textContent) || 0;
   var fuel = loadFuel();
-  document.getElementById('net-val').textContent = (revenue - fuel) + ' DA';
+  document.getElementById('net-val').innerHTML = (revenue - fuel) + '<small>DA</small>';
 }
 
 // ===========================================================
@@ -1270,7 +1266,7 @@ function renderStats() {
   filtered.forEach(function(c){ totalRevenue += c.total; totalClients += c.nbClients; });
 
   document.getElementById('stat-revenue-label').textContent = label;
-  document.getElementById('stat-revenue').textContent = totalRevenue + ' DA';
+  document.getElementById('stat-revenue').innerHTML = totalRevenue + '<small>DA</small>';
   document.getElementById('stat-courses').textContent = filtered.length;
   document.getElementById('stat-clients').textContent = totalClients;
   document.getElementById('fuel-sub').textContent = fuelSubLabel;
@@ -1344,7 +1340,8 @@ function renderHistory() {
         var d = new Date(c.ts);
         var time = ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
         return '<div class="history-item">' +
-          '<div><div class="history-time">'+time+'</div><div class="history-clients">'+clientsLabel(c.nbClients)+'</div></div>' +
+          '<div class="bubble"><svg class="i"><use href="#i-car"/></svg></div>' +
+          '<div class="hi-tx"><div class="history-time">'+time+'</div><div class="history-clients">'+clientsLabel(c.nbClients)+'</div></div>' +
           '<div class="history-amount">'+c.total+' DA</div>' +
         '</div>';
       }).join('');
@@ -1429,7 +1426,7 @@ function dailyBuckets(days, period, refDate) {
 function drawChart(svg, data) {
   var labels = data.labels, values = data.values;
   if (values.length === 0) {
-    svg.innerHTML = '<text x="150" y="70" text-anchor="middle" fill="#e6e0cc" font-size="12">Aucune donnée</text>';
+    svg.innerHTML = '<text x="150" y="70" text-anchor="middle" fill="#B7BCDB" font-size="12">Aucune donnée</text>';
     return;
   }
   var max = Math.max.apply(null, values);
@@ -1443,11 +1440,11 @@ function drawChart(svg, data) {
     var h = (v / max) * (H - padBottom - padTop);
     var x = i * gap + (gap - barW)/2;
     var y = H - padBottom - h;
-    var color = (v === max && v > 0) ? '#FFC107' : '#FFE6A3';
-    bars += '<rect x="'+x+'" y="'+y+'" width="'+barW+'" height="'+Math.max(h,2)+'" rx="4" fill="'+color+'"/>';
+    var color = (v === max && v > 0) ? '#4F6BFF' : '#C3CAFF';
+    bars += '<rect x="'+x+'" y="'+y+'" width="'+barW+'" height="'+Math.max(h,2)+'" rx="6" fill="'+color+'"/>';
     var labelStep = values.length > 12 ? Math.ceil(values.length/8) : 1;
     if (i % labelStep === 0) {
-      bars += '<text x="'+(x+barW/2)+'" y="'+(H-6)+'" text-anchor="middle" font-size="9" fill="#9a9a9a">'+labels[i]+'</text>';
+      bars += '<text x="'+(x+barW/2)+'" y="'+(H-6)+'" text-anchor="middle" font-size="9" fill="#9298BC">'+labels[i]+'</text>';
     }
   });
   svg.innerHTML = bars;
