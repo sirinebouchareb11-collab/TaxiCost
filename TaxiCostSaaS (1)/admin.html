@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#171A3A">
+<title>TaxiCost — Admin</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --navy: #171A3A; --blue: #4F6BFF; --blue2: #7C8CFF; --green: #19B86B; --amber: #F5A524; --red: #E5484D;
+  --bg: #F6F7FB; --card: #FFFFFF; --soft: #F6F7FB; --tint: #ECEFFF; --seg: #E7EAF8;
+  --text: #171A3A; --muted: #6B7094; --border: #E8EAF3;
+}
+html, body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
+body { min-height: 100vh; padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px calc(env(safe-area-inset-bottom, 0px) + 32px); }
+.wrap { max-width: 980px; margin: 0 auto; }
+button { font: inherit; cursor: pointer; border: none; }
+input { font: inherit; color: var(--text); }
+.hidden { display: none !important; }
+
+/* ---- connexion / refus ---- */
+.center-card { max-width: 380px; margin: 12vh auto 0; background: var(--card); border-radius: 28px; padding: 28px 22px; display: flex; flex-direction: column; gap: 12px; text-align: center; box-shadow: 0 12px 30px rgba(23,26,58,.08); }
+.center-card h1 { font-size: 24px; font-weight: 800; letter-spacing: -.02em; }
+.center-card p { font-size: 13px; color: var(--muted); font-weight: 600; line-height: 1.5; }
+.field { width: 100%; padding: 15px 16px; border-radius: 16px; border: 1.5px solid var(--border); background: var(--card); outline: none; font-weight: 600; font-size: 15px; }
+.field:focus { border-color: var(--blue); }
+.err { color: var(--red); font-size: 12px; font-weight: 700; min-height: 16px; }
+.btn { height: 48px; border-radius: 16px; font-weight: 800; font-size: 14px; padding: 0 18px; background: var(--blue); color: #fff; }
+.btn.ghost { background: var(--card); color: var(--text); box-shadow: inset 0 0 0 1.5px var(--border); }
+.btn.soft { background: var(--tint); color: var(--blue); }
+.btn.danger { background: color-mix(in srgb, var(--red) 10%, var(--card)); color: var(--red); }
+.btn.small { height: 38px; border-radius: 12px; font-size: 13px; padding: 0 14px; }
+.btn:active { transform: scale(.98); }
+.btn:disabled { opacity: .5; }
+
+/* ---- en-tête ---- */
+.top { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.logo { width: 44px; height: 44px; border-radius: 15px; background: var(--navy); display: grid; place-items: center; flex-shrink: 0; }
+.logo svg { width: 24px; height: auto; fill: #fff; }
+.top .ttl { flex: 1; min-width: 160px; }
+.top h1 { font-size: 22px; font-weight: 800; letter-spacing: -.02em; line-height: 1.1; }
+.top .who { font-size: 12px; color: var(--muted); font-weight: 600; margin-top: 3px; word-break: break-all; }
+.top .acts { display: flex; gap: 8px; }
+
+/* ---- stats ---- */
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+@media (max-width: 640px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+.stat { background: var(--card); border-radius: 22px; padding: 14px 16px; }
+.stat b { display: block; font-size: 28px; font-weight: 800; letter-spacing: -.03em; }
+.stat span { font-size: 12px; color: var(--muted); font-weight: 700; }
+.stat.hot { background: var(--navy); color: #fff; }
+.stat.hot span { color: var(--blue2); }
+
+/* ---- onglets, recherche, filtres ---- */
+.tabs { display: flex; background: var(--seg); border-radius: 16px; padding: 4px; gap: 2px; margin-bottom: 12px; }
+.tabs button { flex: 1; padding: 10px 0; border-radius: 12px; background: none; font-weight: 800; font-size: 13px; color: var(--muted); }
+.tabs button.on { background: var(--card); color: var(--text); box-shadow: 0 2px 6px rgba(23,26,58,.1); }
+.search { margin-bottom: 10px; }
+.chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 8px; }
+.chip { flex: none; padding: 8px 14px; border-radius: 999px; background: var(--card); color: var(--muted); font-weight: 800; font-size: 12px; box-shadow: inset 0 0 0 1.5px var(--border); }
+.chip.on { background: var(--blue); color: #fff; box-shadow: none; }
+.count { font-size: 12px; color: var(--muted); font-weight: 700; margin: 4px 4px 10px; }
+
+/* ---- cartes abonnés ---- */
+.list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.u { background: var(--card); border-radius: 24px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.u.todo { box-shadow: inset 0 0 0 2px var(--blue); }
+.u-head { display: flex; align-items: center; gap: 12px; }
+.av { width: 42px; height: 42px; border-radius: 14px; background: var(--tint); color: var(--blue); font-weight: 800; display: grid; place-items: center; flex-shrink: 0; text-transform: uppercase; }
+.u-id { flex: 1; min-width: 0; }
+.u-name { font-weight: 800; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.u-mail { font-size: 12px; color: var(--muted); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.badge { font-size: 11px; font-weight: 800; border-radius: 999px; padding: 5px 10px; white-space: nowrap; flex-shrink: 0; }
+.b-active { background: #E1F6EC; color: #0F8F51; }
+.b-trial { background: var(--tint); color: var(--blue); }
+.b-blocked { background: #FFF1D6; color: #B26B00; }
+.b-expired { background: color-mix(in srgb, var(--red) 12%, var(--card)); color: var(--red); }
+.b-paid { background: #E1F6EC; color: #0F8F51; }
+.b-pending { background: #FFF1D6; color: #B26B00; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); font-weight: 600; line-height: 1.5; }
+.meta b { color: var(--text); font-weight: 800; }
+.ref { background: var(--soft); border-radius: 8px; padding: 2px 8px; font-weight: 800; color: var(--text); font-size: 12px; letter-spacing: .04em; cursor: pointer; }
+.req { display: inline-block; background: var(--blue); color: #fff; border-radius: 999px; padding: 3px 10px; font-size: 11px; font-weight: 800; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
+.actions .btn { flex: 1 1 auto; min-width: 84px; }
+.date-row { display: flex; gap: 8px; align-items: center; }
+.date-row input { flex: 1; padding: 10px 12px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--soft); font-weight: 700; }
+.empty { text-align: center; color: var(--muted); font-weight: 600; padding: 40px 0; grid-column: 1 / -1; }
+
+/* ---- paiements ---- */
+.pay { background: var(--card); border-radius: 20px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; }
+.pay .tx { flex: 1; min-width: 0; }
+.pay .tx b { display: block; font-size: 14px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pay .tx span { font-size: 12px; color: var(--muted); font-weight: 600; }
+.pay .amt { font-weight: 800; font-size: 16px; }
+
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--navy); color: #fff; font-size: 13px; font-weight: 700; padding: 12px 20px; border-radius: 999px; opacity: 0; transition: opacity .3s; pointer-events: none; max-width: 92%; z-index: 50; text-align: center; }
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- CONNEXION -->
+<div id="view-login" class="center-card hidden">
+  <h1>TaxiCost Admin</h1>
+  <p>Connecte-toi avec ton compte administrateur.</p>
+  <input class="field" id="a-email" type="email" placeholder="Email" autocomplete="email">
+  <input class="field" id="a-pass" type="password" placeholder="Mot de passe" autocomplete="current-password">
+  <div class="err" id="a-err"></div>
+  <button class="btn" id="a-login">Se connecter</button>
+</div>
+
+<!-- ACCÈS REFUSÉ -->
+<div id="view-denied" class="center-card hidden">
+  <h1>Accès refusé</h1>
+  <p>Ce compte n'est pas administrateur. Ajoute ton email dans la table <b>admins</b> (voir le fichier SQL), puis reconnecte-toi.</p>
+  <button class="btn ghost" id="d-logout">Se déconnecter</button>
+</div>
+
+<!-- DASHBOARD -->
+<div id="view-app" class="wrap hidden">
+  <div class="top">
+    <div class="logo"><svg viewBox="165 113 190 119" aria-hidden="true"><defs><mask id="cc" maskUnits="userSpaceOnUse" x="160" y="108" width="200" height="130"><rect x="160" y="108" width="200" height="130" fill="#fff"/><circle cx="212" cy="215" r="30"/><circle cx="308" cy="215" r="30"/></mask></defs><g mask="url(#cc)"><path d="M197.4 165A58.5 58.5 0 0 1 313.6 165V168H295.9V160A42 42 0 0 0 215.1 160V168H197.4Z"/><path d="M190 160H330A25 25 0 0 1 355 185V202A12 12 0 0 1 343 214H177A12 12 0 0 1 165 202V185A25 25 0 0 1 190 160Z"/></g><circle cx="212" cy="215" r="17"/><circle cx="308" cy="215" r="17"/></svg></div>
+    <div class="ttl"><h1>Abonnements</h1><div class="who" id="who"></div></div>
+    <div class="acts">
+      <button class="btn soft small" id="btn-refresh">Actualiser</button>
+      <button class="btn ghost small" id="btn-logout">Déconnexion</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat hot"><b id="s-todo">0</b><span>À activer</span></div>
+    <div class="stat"><b id="s-active">0</b><span>Abonnés actifs</span></div>
+    <div class="stat"><b id="s-trial">0</b><span>En essai</span></div>
+    <div class="stat"><b id="s-total">0</b><span>Comptes au total</span></div>
+  </div>
+
+  <div class="tabs">
+    <button id="tab-subs" class="on">Abonnés</button>
+    <button id="tab-pays">Paiements en ligne</button>
+  </div>
+
+  <div id="pane-subs">
+    <input class="field search" id="q" type="search" placeholder="Rechercher : nom, email ou référence…">
+    <div class="chips" id="chips"></div>
+    <div class="count" id="count"></div>
+    <div class="list" id="list"></div>
+  </div>
+
+  <div id="pane-pays" class="hidden">
+    <div class="count" id="pcount"></div>
+    <div class="list" id="plist" style="grid-template-columns:1fr;"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var SUPABASE_URL = 'https://idqhakkbqdmysfgbyzwb.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlkcWhha2ticWRteXNmZ2J5endiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyNDk2NTMsImV4cCI6MjEwNDgyNTY1M30.MADG5VX49WNFkI4KBj8-lCnPjAAOcFhN_iJUj7fITsU';
+var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+var rows = [];          // abonnés
+var filter = 'todo';    // todo | all | active | trial | blocked
+var query = '';
+var openDate = null;    // user_id dont le sélecteur de date est ouvert
+
+function $(id) { return document.getElementById(id); }
+function esc(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function toast(msg) {
+  var el = $('toast'); el.textContent = msg; el.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(function() { el.classList.remove('show'); }, 2600);
+}
+function show(view) {
+  ['view-login', 'view-denied', 'view-app'].forEach(function(v) { $(v).classList.toggle('hidden', v !== view); });
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+function daysLeft(d) { return Math.ceil((new Date(d).getTime() - Date.now()) / 86400000); }
+function planLabel(p) { return p === 'yearly' ? '1 an' : p === 'monthly' ? '1 mois' : ''; }
+function methodLabel(m) { return m === 'chargily' ? 'En ligne (Chargily)' : m === 'manual' ? 'Manuel' : (m || '—'); }
+
+// ----- état d'un abonné -----
+function stateOf(r) {
+  var now = Date.now();
+  if (r.status === 'active') {
+    if (!r.subscription_end) return { key: 'active', label: 'Actif (illimité)', cls: 'b-active' };
+    return new Date(r.subscription_end).getTime() > now
+      ? { key: 'active', label: 'Actif', cls: 'b-active' }
+      : { key: 'blocked', label: 'Expiré', cls: 'b-expired' };
+  }
+  if (r.status === 'trial' && r.trial_end) {
+    return new Date(r.trial_end).getTime() > now
+      ? { key: 'trial', label: 'Essai', cls: 'b-trial' }
+      : { key: 'blocked', label: 'Essai terminé', cls: 'b-expired' };
+  }
+  return { key: 'blocked', label: 'En attente', cls: 'b-blocked' };
+}
+function needsActivation(r) { return !!r.requested_plan && stateOf(r).key !== 'active'; }
+
+// ----- connexion -----
+function boot() {
+  sb.auth.getSession().then(function(res) {
+    if (res.data && res.data.session) loadAll(); else show('view-login');
+  });
+}
+$('a-login').onclick = function() {
+  $('a-err').textContent = '';
+  var email = $('a-email').value.trim(), pass = $('a-pass').value;
+  if (!email || !pass) { $('a-err').textContent = 'Remplis tous les champs'; return; }
+  sb.auth.signInWithPassword({ email: email, password: pass }).then(function(res) {
+    if (res.error) { $('a-err').textContent = 'Email ou mot de passe incorrect'; return; }
+    loadAll();
+  });
+};
+$('a-pass').addEventListener('keydown', function(e) { if (e.key === 'Enter') $('a-login').click(); });
+function logout() { sb.auth.signOut().then(function() { rows = []; show('view-login'); }); }
+$('btn-logout').onclick = logout;
+$('d-logout').onclick = logout;
+$('btn-refresh').onclick = function() { loadAll(true); };
+
+// ----- chargement -----
+function loadAll(manual) {
+  sb.rpc('admin_list_subscriptions').then(function(res) {
+    if (res.error) {
+      if (/not authorized/i.test(res.error.message || '')) { show('view-denied'); return; }
+      toast('Erreur : ' + (res.error.message || 'chargement impossible'));
+      if (!rows.length) show('view-login');
+      return;
+    }
+    rows = res.data || [];
+    sb.auth.getUser().then(function(u) { $('who').textContent = (u.data && u.data.user && u.data.user.email) || ''; });
+    show('view-app');
+    render();
+    if (!$('pane-pays').classList.contains('hidden')) loadPayments();
+    if (manual) toast('Liste actualisée');
+  });
+}
+
+// ----- rendu -----
+function render() {
+  var todo = 0, active = 0, trial = 0;
+  rows.forEach(function(r) {
+    var k = stateOf(r).key;
+    if (k === 'active') active++;
+    if (k === 'trial') trial++;
+    if (needsActivation(r)) todo++;
+  });
+  $('s-todo').textContent = todo; $('s-active').textContent = active; $('s-trial').textContent = trial; $('s-total').textContent = rows.length;
+
+  var defs = [['todo', 'À activer (' + todo + ')'], ['all', 'Tous'], ['active', 'Actifs'], ['trial', 'Essais'], ['blocked', 'Bloqués / expirés']];
+  $('chips').innerHTML = defs.map(function(d) {
+    return '<button class="chip' + (filter === d[0] ? ' on' : '') + '" data-f="' + d[0] + '">' + esc(d[1]) + '</button>';
+  }).join('');
+
+  var q = query.trim().toLowerCase();
+  var list = rows.filter(function(r) {
+    if (filter === 'todo' && !needsActivation(r)) return false;
+    if (filter !== 'todo' && filter !== 'all' && stateOf(r).key !== filter) return false;
+    if (!q) return true;
+    return (String(r.name || '') + ' ' + String(r.email || '') + ' ' + String(r.ref || '')).toLowerCase().indexOf(q) !== -1;
+  });
+  list.sort(function(a, b) {
+    var ta = needsActivation(a) ? 0 : 1, tb = needsActivation(b) ? 0 : 1;
+    if (ta !== tb) return ta - tb;
+    return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+  });
+
+  $('count').textContent = list.length + ' résultat' + (list.length > 1 ? 's' : '');
+  $('list').innerHTML = list.length ? list.map(card).join('') : '<div class="empty">Aucun abonné dans cette liste.</div>';
+}
+
+function card(r) {
+  var st = stateOf(r), todo = needsActivation(r);
+  var initial = (r.name || r.email || '?').trim().charAt(0);
+  var end = '';
+  if (r.status === 'active' && r.subscription_end) {
+    var d = daysLeft(r.subscription_end);
+    end = '<span>Fin : <b>' + esc(fmtDate(r.subscription_end)) + '</b> (' + (d >= 0 ? 'dans ' + d + ' j' : 'expiré') + ')</span>';
+  } else if (r.status === 'trial' && r.trial_end) {
+    end = '<span>Fin d\'essai : <b>' + esc(fmtDate(r.trial_end)) + '</b></span>';
+  }
+  var pay = r.last_payment_at ? '<span>Dernier paiement : <b>' + esc(methodLabel(r.last_payment_method)) + '</b>, ' + esc(fmtDate(r.last_payment_at)) + '</span>' : '';
+  var req = r.requested_plan ? '<span>Demande : <span class="req">' + esc(planLabel(r.requested_plan)) + '</span></span>' : '';
+  var id = esc(r.user_id);
+  var m1 = r.requested_plan === 'monthly' ? 'btn' : 'btn soft';
+  var y1 = r.requested_plan === 'yearly' ? 'btn' : 'btn soft';
+  var dateRow = openDate === r.user_id
+    ? '<div class="date-row"><input type="date" id="d-' + id + '"><button class="btn small" data-act="setend" data-id="' + id + '">Valider</button></div>' : '';
+  return '<div class="u' + (todo ? ' todo' : '') + '">' +
+    '<div class="u-head"><div class="av">' + esc(initial) + '</div>' +
+      '<div class="u-id"><div class="u-name">' + esc(r.name || 'Sans nom') + '</div><div class="u-mail">' + esc(r.email || '—') + '</div></div>' +
+      '<span class="badge ' + st.cls + '">' + esc(st.label) + '</span></div>' +
+    '<div class="meta"><span>Réf. <span class="ref" data-act="copy" data-ref="' + esc(r.ref) + '" title="Copier">' + esc(r.ref) + '</span></span>' +
+      '<span>Inscrit le <b>' + esc(fmtDate(r.created_at)) + '</b></span>' + end + req + pay + '</div>' +
+    '<div class="actions">' +
+      '<button class="' + m1 + '" data-act="activate" data-plan="monthly" data-id="' + id + '">+ 1 mois</button>' +
+      '<button class="' + y1 + '" data-act="activate" data-plan="yearly" data-id="' + id + '">+ 1 an</button>' +
+      '<button class="btn ghost" data-act="datebox" data-id="' + id + '">Date…</button>' +
+      '<button class="btn danger" data-act="deactivate" data-id="' + id + '">Désactiver</button>' +
+    '</div>' + dateRow + '</div>';
+}
+
+// ----- actions -----
+function rowById(id) { return rows.filter(function(r) { return r.user_id === id; })[0]; }
+function after(res, okMsg) {
+  if (res.error) { toast('Erreur : ' + res.error.message); return; }
+  toast(okMsg); loadAll();
+}
+
+document.addEventListener('click', function(e) {
+  var chip = e.target.closest('.chip');
+  if (chip) { filter = chip.getAttribute('data-f'); render(); return; }
+  var el = e.target.closest('[data-act]');
+  if (!el) return;
+  var act = el.getAttribute('data-act'), id = el.getAttribute('data-id'), r = id ? rowById(id) : null;
+
+  if (act === 'copy') {
+    var ref = el.getAttribute('data-ref');
+    if (navigator.clipboard) navigator.clipboard.writeText(ref).then(function() { toast('Référence copiée : ' + ref); });
+    return;
+  }
+  if (!r) return;
+  var who = (r.name || r.email || 'ce compte');
+
+  if (act === 'activate') {
+    var plan = el.getAttribute('data-plan');
+    if (!confirm('Activer ' + planLabel(plan) + ' pour ' + who + ' ?')) return;
+    sb.rpc('admin_activate', { p_user: id, p_plan: plan }).then(function(res) { after(res, 'Abonnement activé : ' + who); });
+  } else if (act === 'datebox') {
+    openDate = (openDate === id) ? null : id; render();
+  } else if (act === 'setend') {
+    var v = $('d-' + id).value;
+    if (!v) { toast('Choisis une date'); return; }
+    var p = v.split('-'), end = new Date(+p[0], +p[1] - 1, +p[2], 23, 59, 59);
+    if (!confirm('Fixer la fin de l\'abonnement de ' + who + ' au ' + fmtDate(end) + ' ?')) return;
+    sb.rpc('admin_set_end', { p_user: id, p_end: end.toISOString() }).then(function(res) { openDate = null; after(res, 'Date mise à jour : ' + who); });
+  } else if (act === 'deactivate') {
+    if (!confirm('Désactiver l\'abonnement de ' + who + ' ? Il verra l\'écran de paiement.')) return;
+    sb.rpc('admin_deactivate', { p_user: id }).then(function(res) { after(res, 'Désactivé : ' + who); });
+  }
+});
+$('q').addEventListener('input', function() { query = this.value; render(); });
+
+// ----- onglets + paiements en ligne -----
+function setTab(which) {
+  $('tab-subs').classList.toggle('on', which === 'subs');
+  $('tab-pays').classList.toggle('on', which === 'pays');
+  $('pane-subs').classList.toggle('hidden', which !== 'subs');
+  $('pane-pays').classList.toggle('hidden', which !== 'pays');
+  if (which === 'pays') loadPayments();
+}
+$('tab-subs').onclick = function() { setTab('subs'); };
+$('tab-pays').onclick = function() { setTab('pays'); };
+
+function loadPayments() {
+  sb.from('payments').select('*').order('created_at', { ascending: false }).limit(100).then(function(res) {
+    if (res.error) { $('pcount').textContent = ''; $('plist').innerHTML = '<div class="empty">Erreur : ' + esc(res.error.message) + '</div>'; return; }
+    var data = res.data || [];
+    $('pcount').textContent = data.length + ' paiement' + (data.length > 1 ? 's' : '') + ' en ligne (100 derniers)';
+    if (!data.length) { $('plist').innerHTML = '<div class="empty">Aucun paiement en ligne pour le moment.</div>'; return; }
+    $('plist').innerHTML = data.map(function(p) {
+      var r = rowById(p.user_id);
+      var name = r ? (r.name || r.email) : String(p.user_id).slice(0, 8).toUpperCase();
+      var ok = p.status === 'paid';
+      return '<div class="pay"><div class="tx"><b>' + esc(name) + '</b><span>' + esc(planLabel(p.plan)) + ' · ' + esc(fmtDate(p.paid_at || p.created_at)) + ' · ' + esc(String(p.checkout_id).slice(0, 10)) + '…</span></div>' +
+        '<div class="amt">' + esc(p.amount) + ' DA</div>' +
+        '<span class="badge ' + (ok ? 'b-paid' : (p.status === 'pending' ? 'b-pending' : 'b-expired')) + '">' + esc(ok ? 'Payé' : (p.status === 'pending' ? 'En attente' : p.status)) + '</span></div>';
+    }).join('');
+  });
+}
+
+boot();
+</script>
+</body>
+</html>
