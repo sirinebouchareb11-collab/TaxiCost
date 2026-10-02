@@ -9,7 +9,7 @@ var supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Ton numéro WhatsApp (format international sans le +)
 var WHATSAPP_NUMBER = '213793270749'; // ← REMPLACE PAR TON VRAI NUMÉRO ex: 213770123456
-var PRIX_ABONNEMENT = '500 DA';
+var PRIX_ABONNEMENT = '1000 DA';
 
 // ----- Connexion -----
 function doLogin() {
@@ -116,11 +116,11 @@ function subscribeToPlan(plan) {
     var user = res.data && res.data.user;
     if (!user) return;
     var ref = shortRef(user.id);
-    var planLabel = plan === 'yearly' ? '1 an' : '1 mois';
-    var price = plan === 'yearly' ? '5000 DA' : PRIX_ABONNEMENT;
+    var planLabel = '1 an';
+    var price = PRIX_ABONNEMENT;
 
-    // Enregistre la formule choisie dans Supabase (aide à la v\u00e9rification c\u00f4t\u00e9 admin)
-    supabaseClient.from('subscriptions').update({ requested_plan: plan }).eq('user_id', user.id).then(function(){});
+    // Enregistre la formule choisie dans Supabase (aide à la vérification côté admin)
+    supabaseClient.from('subscriptions').update({ requested_plan: 'yearly' }).eq('user_id', user.id).then(function(){});
 
     var msg = encodeURIComponent(
       'Bonjour, je souhaite activer mon abonnement TaxiCost.\n' +
@@ -132,21 +132,69 @@ function subscribeToPlan(plan) {
   });
 }
 
-// ----- Écoute le statut d'authentification en temps réel -----
-supabaseClient.auth.onAuthStateChange(function(event, session) {
-  if (!session) {
-    showScreen('s-login');
-    return;
+// ----- Retour du paiement en ligne (Chargily) : ?paid=1 = succès, ?paid=0 = échec -----
+var paymentReturn = null;
+var paymentPollCount = 0;
+var paymentPollTimer = null;
+var manualCheck = false;
+(function readPaymentReturn() {
+  var q = window.location.search || '';
+  if (/[?&]paid=1/.test(q)) paymentReturn = 'success';
+  else if (/[?&]paid=0/.test(q)) paymentReturn = 'failed';
+  if (paymentReturn) {
+    try { window.history.replaceState(null, '', window.location.pathname); } catch (e) {}
   }
-  var user = session.user;
+})();
 
+// ----- Paiement en ligne : CCP (carte Edahabia) ou carte CIB, via Chargily -----
+// La clé secrète Chargily reste côté serveur (fonction Supabase "create-checkout").
+function payOnline(plan) {
+  showToast(t('pay_redirecting'));
+  supabaseClient.functions.invoke('create-checkout', { body: { plan: 'yearly' } })
+    .then(function(res) {
+      if (res.error || !res.data || !res.data.checkout_url) { showToast(t('pay_error')); return; }
+      window.location.href = res.data.checkout_url;
+    })
+    .catch(function() { showToast(t('pay_error')); });
+}
+
+// ----- Bouton "Vérifier mon accès" (après un paiement ou une activation manuelle) -----
+function refreshSubscription(isManual) {
+  manualCheck = isManual === true;
+  supabaseClient.auth.getUser().then(function(res) {
+    var user = res.data && res.data.user;
+    if (user) routeSubscription(user);
+  });
+}
+
+// Écran bloqué (compte en attente / essai terminé) + suivi du retour de paiement
+function showBlockedScreen(id) {
+  showScreen(id);
+  updateRefLabels();
+  if (paymentReturn === 'success' && paymentPollCount < 15) {
+    // le paiement vient d'être fait : on revérifie toutes les 3 s en attendant l'activation
+    paymentPollCount++;
+    showToast(t('pay_success_wait'));
+    clearTimeout(paymentPollTimer);
+    paymentPollTimer = setTimeout(function() { refreshSubscription(false); }, 3000);
+  } else if (paymentReturn === 'failed') {
+    paymentReturn = null;
+    showToast(t('pay_failed'));
+  } else if (manualCheck) {
+    showToast(t('pay_still_pending'));
+  }
+  manualCheck = false;
+}
+
+// ----- Lit l'abonnement et ouvre le bon écran -----
+function routeSubscription(user) {
   supabaseClient
     .from('subscriptions')
     .select('*')
     .eq('user_id', user.id)
     .single()
     .then(function(res) {
-      if (res.error || !res.data) { showScreen('s-pending'); updateRefLabels(); return; }
+      if (res.error || !res.data) { showBlockedScreen('s-pending'); return; }
       var data = res.data;
       var name = data.name || 'Chauffeur';
 
@@ -160,8 +208,7 @@ supabaseClient.auth.onAuthStateChange(function(event, session) {
             return;
           }
           // Abonnement expiré → retour à l'écran de paiement
-          showScreen('s-expired');
-          updateRefLabels();
+          showBlockedScreen('s-expired');
           return;
         }
         // Pas de date de fin enregistrée (compte activé manuellement à l'ancienne) → accès illimité
@@ -179,18 +226,28 @@ supabaseClient.auth.onAuthStateChange(function(event, session) {
           return;
         }
         // Essai expiré → écran abonnement
-        showScreen('s-expired');
-        updateRefLabels();
+        showBlockedScreen('s-expired');
         return;
       }
 
       // 3. Pas actif, pas d'essai → en attente
-      showScreen('s-pending');
-      updateRefLabels();
+      showBlockedScreen('s-pending');
     });
+}
+
+// ----- Écoute le statut d'authentification en temps réel -----
+supabaseClient.auth.onAuthStateChange(function(event, session) {
+  if (!session) {
+    showScreen('s-login');
+    return;
+  }
+  routeSubscription(session.user);
 });
 
 function enterApp(name, trialDaysLeft) {
+  paymentReturn = null;
+  paymentPollCount = 0;
+  clearTimeout(paymentPollTimer);
   supabaseClient.auth.getUser().then(function(res) {
     var user = res.data && res.data.user;
     if (!user) return;
@@ -341,7 +398,7 @@ var I18N = {
     pending_msg1: 'Votre compte a été créé !',
     pending_msg2: 'Choisis ta formule, envoie le montant par CCP ou virement en indiquant bien ta référence',
     pending_msg3: 'puis contacte-nous sur WhatsApp pour confirmer.',
-    plan_monthly: '1 mois — 500 DA', plan_yearly: '1 an — 5000 DA',
+    plan_yearly: '1 an — 1000 DA',
     pending_note: 'Une fois votre paiement confirmé, votre accès sera activé sous 24h.', logout: 'Se déconnecter',
     expired_title: 'Essai terminé',
     expired_msg1: 'Ton essai gratuit ou ton abonnement est terminé.',
@@ -361,6 +418,17 @@ var I18N = {
     enable_reminders: 'Activer les rappels sur le téléphone', reminders_on: 'Rappels activés',
     insurance: 'Assurance', not_set: 'Non renseignée', payment_date: 'Date de paiement',
     duration_months: 'Durée (mois)', oil_change: 'Vidange', oil_change_date: 'Date de la vidange',
+    pay_online_title: 'Paiement en ligne', pay_online_sub: 'CCP (carte Edahabia) ou carte CIB — activation immédiate',
+    pay_or: 'ou', pay_manual_title: 'Virement CCP + WhatsApp',
+    pay_redirecting: 'Redirection vers le paiement…', pay_error: 'Paiement en ligne indisponible, réessaie ou utilise WhatsApp',
+    pay_success_wait: 'Paiement reçu ! Activation en cours…', pay_failed: 'Paiement annulé ou échoué',
+    pay_check_btn: 'Vérifier mon accès', pay_still_pending: 'Pas encore activé, réessaie dans un instant',
+    quality: 'Contrôle qualité', quality_date: 'Date du contrôle',
+    quality_expires_in: 'Contrôle qualité à faire dans', quality_late: 'Contrôle qualité en retard !',
+    my_reminders: 'Mes rappels', add_reminder: 'Ajouter un rappel', reminder_name_ph: 'Nom du rappel (ex : essence)',
+    reminder_default: 'Rappel', appointment_date: 'Date du rendez-vous',
+    due_in: 'Dans', due_on: 'Le', due_today: "Aujourd'hui !", due_past: 'Dépassé depuis',
+    confirm_delete_reminder: 'Supprimer ce rappel ?',
     app_language: "Langue de l'app", auto_tarif: 'Tarif automatique', day_short: 'Jour', night_short: 'Nuit',
     tarif_day: 'Tarif jour', fixed_amount: 'Montant fixe', tarif_night: 'Tarif nuit',
     night_start: 'Début nuit', night_end: 'Fin nuit',
@@ -395,14 +463,14 @@ var I18N = {
     login_btn: 'تسجيل الدخول', forgot_link: 'نسيت كلمة المرور؟', to_register: 'ما عندكش حساب؟ سجل',
     forgot_title: 'نسيت كلمة المرور', forgot_subtitle: 'دخل الإيميل ديالك، نبعتولك رابط باش تبدلها.',
     send_link: 'ابعث الرابط', back_to_login: 'رجوع لتسجيل الدخول',
-    register_title: 'إنشاء حساب', register_subtitle: 'تسجيل مجاني · اشتراك 500 دج/شهر',
+    register_title: 'إنشاء حساب', register_subtitle: 'تسجيل مجاني · اشتراك 1000 دج/سنة'',
     ph_name: 'الاسم', ph_password_hint: 'كلمة المرور (6 خانات على الأقل)',
     register_btn: 'سجل', to_login: 'عندك حساب؟ سجل الدخول',
     pending_title: 'الحساب في الانتظار',
     pending_msg1: 'تم إنشاء حسابك!',
     pending_msg2: 'اختر الصيغة، ابعث المبلغ عبر CCP أو تحويل بنكي مع ذكر الرجعة ديالك',
     pending_msg3: 'وبعدها تواصل معنا عبر واتساب.',
-    plan_monthly: 'شهر — 500 دج', plan_yearly: 'عام كامل — 5000 دج',
+    plan_yearly: 'عام كامل — 1000 دج',
     pending_note: 'بمجرد تأكيد الدفع، سيتم تفعيل حسابك خلال 24 ساعة.', logout: 'تسجيل الخروج',
     expired_title: 'انتهت التجربة',
     expired_msg1: 'انتهت تجربتك المجانية أو اشتراكك.',
@@ -421,6 +489,17 @@ var I18N = {
     enable_reminders: 'فعّل التذكيرات على الهاتف', reminders_on: 'التذكيرات مفعّلة',
     insurance: 'التأمين', not_set: 'غير محدد', payment_date: 'تاريخ الخلاص',
     duration_months: 'المدة (أشهر)', oil_change: 'الفيدانج', oil_change_date: 'تاريخ الفيدانج',
+    pay_online_title: 'الدفع عبر الإنترنت', pay_online_sub: 'CCP (بطاقة الذهبية) أو بطاقة CIB — تفعيل فوري',
+    pay_or: 'أو', pay_manual_title: 'تحويل CCP + واتساب',
+    pay_redirecting: 'جاري التحويل لصفحة الدفع…', pay_error: 'الدفع الإلكتروني غير متاح، أعد المحاولة أو استعمل واتساب',
+    pay_success_wait: 'تم استلام الدفع! جاري التفعيل…', pay_failed: 'تم إلغاء الدفع أو فشل',
+    pay_check_btn: 'تحقق من حسابي', pay_still_pending: 'لم يتم التفعيل بعد، أعد المحاولة بعد لحظة',
+    quality: 'مراقبة الجودة', quality_date: 'تاريخ المراقبة',
+    quality_expires_in: 'مراقبة الجودة خلال', quality_late: 'مراقبة الجودة متأخرة!',
+    my_reminders: 'تذكيراتي', add_reminder: 'أضف تذكير', reminder_name_ph: 'اسم التذكير (مثلا: الأسانس)',
+    reminder_default: 'تذكير', appointment_date: 'تاريخ الموعد',
+    due_in: 'بعد', due_on: 'يوم', due_today: 'اليوم!', due_past: 'فات منذ',
+    confirm_delete_reminder: 'مسح هذا التذكير؟',
     app_language: 'لغة التطبيق', auto_tarif: 'التسعيرة التلقائية', day_short: 'نهار', night_short: 'ليل',
     tarif_day: 'تسعيرة النهار', fixed_amount: 'مبلغ ثابت', tarif_night: 'تسعيرة الليل',
     night_start: 'بداية الليل', night_end: 'نهاية الليل',
@@ -481,6 +560,7 @@ function applyTranslations() {
   if (sel) { sel.innerHTML = ''; populateWilayaSelect(); }
 
   render();
+  renderCustomReminders();
   if (document.getElementById('s-stats').classList.contains('active')) renderStats();
   if (document.getElementById('s-history').classList.contains('active')) renderHistory();
   updateTotal();
@@ -543,7 +623,7 @@ function goTab(id, btn, fromPill) {
   if (id === 's-stats') renderStats();
   if (id === 's-history') renderHistory();
   if (id === 's-main') updateTarifPill();
-  if (id === 's-maintenance') { loadMaintenanceIntoInputs(); renderMaintenanceStatus(); }
+  if (id === 's-maintenance') { loadMaintenanceIntoInputs(); renderMaintenanceStatus(); renderCustomReminders(); }
   if (id === 's-settings') loadSettingsIntoInputs();
 }
 
@@ -1239,9 +1319,26 @@ function onFuelChange() {
   persistAppData();
   updateNet();
 }
+// Essence : en "jour" = valeur saisie. En "semaine" / "mois" = somme des essences saisies chaque jour.
 function loadFuel() {
-  var v = parseFloat(appData.fuel[fuelKey()]);
-  return isNaN(v) ? 0 : v;
+  if (currentPeriod === 'day') {
+    var v = parseFloat(appData.fuel[fuelKey()]);
+    return isNaN(v) ? 0 : v;
+  }
+  var now = new Date();
+  var d = currentPeriod === 'week' ? startOfWeek(now) : startOfMonth(now);
+  var sum = 0;
+  while (d.getTime() <= now.getTime()) {
+    var dv = parseFloat(appData.fuel['taxicost_fuel_day_' + dayKey(d)]);
+    if (!isNaN(dv)) sum += dv;
+    d.setDate(d.getDate() + 1);
+  }
+  if (sum === 0) {
+    // anciennes valeurs saisies directement sur la semaine / le mois
+    var legacy = parseFloat(appData.fuel[fuelKey()]);
+    if (!isNaN(legacy)) sum = legacy;
+  }
+  return sum;
 }
 function updateNet() {
   var revenue = parseInt(document.getElementById('stat-revenue').textContent) || 0;
@@ -1265,12 +1362,19 @@ function renderStats() {
   var totalRevenue = 0, totalClients = 0;
   filtered.forEach(function(c){ totalRevenue += c.total; totalClients += c.nbClients; });
 
+  // Semaine / Mois : seulement Revenu brut + Revenu net (pas de cartes Courses/Clients ni de case Essence)
+  var isDay = currentPeriod === 'day';
+  var statRow = document.getElementById('stat-row');
+  var fuelCard = document.getElementById('fuel-card');
+  if (statRow) statRow.style.display = isDay ? '' : 'none';
+  if (fuelCard) fuelCard.style.display = isDay ? '' : 'none';
+
   document.getElementById('stat-revenue-label').textContent = label;
   document.getElementById('stat-revenue').innerHTML = totalRevenue + '<small>DA</small>';
   document.getElementById('stat-courses').textContent = filtered.length;
   document.getElementById('stat-clients').textContent = totalClients;
   document.getElementById('fuel-sub').textContent = fuelSubLabel;
-  document.getElementById('fuel-input').value = loadFuel() || '';
+  document.getElementById('fuel-input').value = isDay ? (loadFuel() || '') : '';
   document.getElementById('net-sub').textContent = netSubLabel;
   updateNet();
 
@@ -1451,14 +1555,23 @@ function drawChart(svg, data) {
 }
 
 // ===========================================================
-// ===== ENTRETIEN VÉHICULE (Assurance / Vidange) =====
+// ===== ENTRETIEN VÉHICULE (Assurance / Vidange / Contrôle qualité / Rappels perso) =====
 // ===========================================================
+function getCustomList() {
+  if (!appData.maintenance) appData.maintenance = {};
+  if (!Array.isArray(appData.maintenance.custom)) appData.maintenance.custom = [];
+  return appData.maintenance.custom;
+}
+
 function saveMaintenance() {
   var data = {
     insuranceDate: document.getElementById('insurance-date').value,
     insuranceDuration: document.getElementById('insurance-duration').value,
     vidangeDate: document.getElementById('vidange-date').value,
-    vidangeDuration: document.getElementById('vidange-duration').value
+    vidangeDuration: document.getElementById('vidange-duration').value,
+    qualityDate: document.getElementById('quality-date').value,
+    qualityDuration: document.getElementById('quality-duration').value,
+    custom: getCustomList()
   };
   appData.maintenance = data;
   persistAppData();
@@ -1470,7 +1583,10 @@ function loadMaintenance() {
     insuranceDate: d.insuranceDate || '',
     insuranceDuration: d.insuranceDuration || '',
     vidangeDate: d.vidangeDate || '',
-    vidangeDuration: d.vidangeDuration || ''
+    vidangeDuration: d.vidangeDuration || '',
+    qualityDate: d.qualityDate || '',
+    qualityDuration: d.qualityDuration || '',
+    custom: Array.isArray(d.custom) ? d.custom : []
   };
 }
 
@@ -1497,11 +1613,26 @@ function daysLabel(n) {
   return n + ' ' + t('day_word') + (n > 1 ? 's' : '');
 }
 
+function dateText(d) {
+  return d.getDate() + ' ' + MONTH_NAMES()[d.getMonth()] + ' ' + d.getFullYear();
+}
+
+// Lit une date "AAAA-MM-JJ" en heure locale
+function parseLocalDate(str) {
+  var p = String(str).split('-');
+  return new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+}
+
+function escHtml(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// prefix = 'insurance' | 'vidange' | 'quality'
 function renderMaintenanceCard(prefix) {
   var data = loadMaintenance();
   var dateVal = data[prefix + 'Date'];
   var durationVal = data[prefix + 'Duration'];
-  var card = document.getElementById(prefix === 'insurance' ? 'insurance-card' : 'vidange-card');
+  var card = document.getElementById(prefix + '-card');
   var statusEl = document.getElementById(prefix + '-status');
   if (!card || !statusEl) return;
 
@@ -1513,7 +1644,7 @@ function renderMaintenanceCard(prefix) {
 
   var expiry = computeExpiry(dateVal, durationVal);
   var days = daysUntil(expiry);
-  var expiryStr = expiry.getDate() + ' ' + MONTH_NAMES()[expiry.getMonth()] + ' ' + expiry.getFullYear();
+  var expiryStr = dateText(expiry);
 
   if (days < 0) {
     statusEl.textContent = '⚠️ ' + t('expired_since') + ' ' + daysLabel(Math.abs(days));
@@ -1530,37 +1661,133 @@ function renderMaintenanceCard(prefix) {
 function renderMaintenanceStatus() {
   renderMaintenanceCard('insurance');
   renderMaintenanceCard('vidange');
-}
-
-function checkMaintenanceAlerts() {
-  var data = loadMaintenance();
-  var alerts = [];
-
-  var insExpiry = computeExpiry(data.insuranceDate, data.insuranceDuration);
-  if (insExpiry) {
-    var insDays = daysUntil(insExpiry);
-    if (insDays >= 0 && insDays <= 7) alerts.push('🛡️ ' + t('insurance_expires_in') + ' ' + daysLabel(insDays));
-    else if (insDays < 0) alerts.push('🛡️ ' + t('insurance_expired_notif'));
-  }
-
-  var vidExpiry = computeExpiry(data.vidangeDate, data.vidangeDuration);
-  if (vidExpiry) {
-    var vidDays = daysUntil(vidExpiry);
-    if (vidDays >= 0 && vidDays <= 7) alerts.push('🛢️ ' + t('oil_expires_in') + ' ' + daysLabel(vidDays));
-    else if (vidDays < 0) alerts.push('🛢️ ' + t('oil_late'));
-  }
-
-  if (alerts.length > 0) {
-    showToast(alerts.join(' · '));
-  }
+  renderMaintenanceCard('quality');
 }
 
 function loadMaintenanceIntoInputs() {
   var data = loadMaintenance();
-  document.getElementById('insurance-date').value = data.insuranceDate || '';
-  document.getElementById('insurance-duration').value = data.insuranceDuration || '';
-  document.getElementById('vidange-date').value = data.vidangeDate || '';
-  document.getElementById('vidange-duration').value = data.vidangeDuration || '';
+  document.getElementById('insurance-date').value = data.insuranceDate;
+  document.getElementById('insurance-duration').value = data.insuranceDuration;
+  document.getElementById('vidange-date').value = data.vidangeDate;
+  document.getElementById('vidange-duration').value = data.vidangeDuration;
+  document.getElementById('quality-date').value = data.qualityDate;
+  document.getElementById('quality-duration').value = data.qualityDuration;
+}
+
+// ----- Rappels personnalisés (bouton +) : le chauffeur écrit le nom et la date -----
+function renderCustomReminders() {
+  var list = document.getElementById('custom-list');
+  if (!list) return;
+  var items = getCustomList();
+  list.style.display = items.length ? 'flex' : 'none';
+  list.innerHTML = items.map(function(r) {
+    return '<div class="maint-card" id="custom-card-' + r.id + '">' +
+      '<div class="maint-row">' +
+        '<div class="maint-label-group custom-label-group">' +
+          '<div class="maint-icon"><svg class="i"><use href="#i-bell"/></svg></div>' +
+          '<div class="custom-title-wrap">' +
+            '<input class="cell-input custom-title-input" id="custom-label-' + r.id + '" type="text" maxlength="40" ' +
+              'placeholder="' + escHtml(t('reminder_name_ph')) + '" value="' + escHtml(r.label) + '" ' +
+              'oninput="onCustomChange(' + r.id + ',\'label\',this.value)">' +
+            '<div class="maint-sub" id="custom-status-' + r.id + '"></div>' +
+          '</div>' +
+        '</div>' +
+        '<button class="custom-del" onclick="removeCustomReminder(' + r.id + ')" aria-label="Supprimer"><svg class="i s"><use href="#i-trash"/></svg></button>' +
+      '</div>' +
+      '<div class="maint-inputs">' +
+        '<div class="maint-field">' +
+          '<span class="maint-field-label">' + t('appointment_date') + '</span>' +
+          '<input type="date" class="maint-date-input" id="custom-date-' + r.id + '" value="' + escHtml(r.date) + '" ' +
+            'onchange="onCustomChange(' + r.id + ',\'date\',this.value)">' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  items.forEach(function(r) { updateCustomStatus(r.id); });
+}
+
+function updateCustomStatus(id) {
+  var r = getCustomList().filter(function(x) { return x.id === id; })[0];
+  var el = document.getElementById('custom-status-' + id);
+  var card = document.getElementById('custom-card-' + id);
+  if (!r || !el || !card) return;
+
+  if (!r.date) {
+    el.textContent = t('not_set');
+    card.classList.remove('alert');
+    return;
+  }
+  var due = parseLocalDate(r.date);
+  var days = daysUntil(due);
+  var dStr = dateText(due);
+
+  if (days < 0) {
+    el.textContent = '⚠️ ' + t('due_past') + ' ' + daysLabel(Math.abs(days));
+    card.classList.add('alert');
+  } else if (days === 0) {
+    el.textContent = '⚠️ ' + t('due_today');
+    card.classList.add('alert');
+  } else if (days <= 7) {
+    el.textContent = '⚠️ ' + t('due_in') + ' ' + daysLabel(days) + ' (' + dStr + ')';
+    card.classList.add('alert');
+  } else {
+    el.textContent = t('due_on') + ' ' + dStr;
+    card.classList.remove('alert');
+  }
+}
+
+function addCustomReminder() {
+  var id = Date.now();
+  getCustomList().push({ id: id, label: '', date: '' });
+  persistAppData();
+  renderCustomReminders();
+  var card = document.getElementById('custom-card-' + id);
+  if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  var input = document.getElementById('custom-label-' + id);
+  if (input) setTimeout(function() { input.focus(); }, 250);
+}
+
+function onCustomChange(id, field, val) {
+  var r = getCustomList().filter(function(x) { return x.id === id; })[0];
+  if (!r) return;
+  r[field] = val;
+  persistAppData();
+  updateCustomStatus(id);
+}
+
+function removeCustomReminder(id) {
+  if (!confirm(t('confirm_delete_reminder'))) return;
+  appData.maintenance.custom = getCustomList().filter(function(x) { return x.id !== id; });
+  persistAppData();
+  renderCustomReminders();
+}
+
+// ----- Alertes affichées à l'ouverture de l'app -----
+function checkMaintenanceAlerts() {
+  var data = loadMaintenance();
+  var alerts = [];
+
+  function addAlert(icon, expiry, soonKey, lateKey) {
+    if (!expiry) return;
+    var d = daysUntil(expiry);
+    if (d >= 0 && d <= 7) alerts.push(icon + ' ' + t(soonKey) + ' ' + daysLabel(d));
+    else if (d < 0) alerts.push(icon + ' ' + t(lateKey));
+  }
+  addAlert('🛡️', computeExpiry(data.insuranceDate, data.insuranceDuration), 'insurance_expires_in', 'insurance_expired_notif');
+  addAlert('🛢️', computeExpiry(data.vidangeDate, data.vidangeDuration), 'oil_expires_in', 'oil_late');
+  addAlert('✅', computeExpiry(data.qualityDate, data.qualityDuration), 'quality_expires_in', 'quality_late');
+
+  data.custom.forEach(function(r) {
+    if (!r.date) return;
+    var d = daysUntil(parseLocalDate(r.date));
+    if (d >= 0 && d <= 7) {
+      alerts.push('🔔 ' + (r.label || t('reminder_default')) + ' — ' + (d === 0 ? t('due_today') : t('due_in') + ' ' + daysLabel(d)));
+    }
+  });
+
+  if (alerts.length > 0) {
+    showToast(alerts.join(' · '));
+  }
 }
 
 // ===========================================================
@@ -1742,6 +1969,8 @@ function scheduleMaintenanceChecks() {
 
   checkAndNotify('insurance', '🛡️ ' + t('insurance'), data.insuranceDate, data.insuranceDuration, today);
   checkAndNotify('vidange', '🛢️ ' + t('oil_change'), data.vidangeDate, data.vidangeDuration, today);
+  checkAndNotify('quality', '✅ ' + t('quality'), data.qualityDate, data.qualityDuration, today);
+  data.custom.forEach(function(r) { checkAndNotifyCustom(r, today); });
 }
 
 function checkAndNotify(prefix, label, dateStr, duration, today) {
@@ -1759,6 +1988,21 @@ function checkAndNotify(prefix, label, dateStr, duration, today) {
   else msg = label + ' ' + t('expires_in') + ' ' + daysLabel(days);
 
   sendNotification(t('reminder_title'), msg, prefix + '-' + days);
+  localStorage.setItem(sentKey, '1');
+}
+
+// Rappels personnalisés : même principe (7 j, 3 j, 1 j, jour J)
+function checkAndNotifyCustom(r, today) {
+  if (!r.date) return;
+  var days = daysUntil(parseLocalDate(r.date));
+  if (days !== 7 && days !== 3 && days !== 1 && days !== 0) return;
+
+  var sentKey = 'taxicost_notif_custom_' + r.id + '_' + days + '_' + today;
+  if (localStorage.getItem(sentKey)) return;
+
+  var label = '🔔 ' + (r.label || t('reminder_default'));
+  var msg = days === 0 ? label + ' — ' + t('due_today') : label + ' — ' + t('due_in') + ' ' + daysLabel(days);
+  sendNotification(t('reminder_title'), msg, 'custom-' + r.id + '-' + days);
   localStorage.setItem(sentKey, '1');
 }
 
