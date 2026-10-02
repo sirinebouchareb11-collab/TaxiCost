@@ -218,6 +218,7 @@ svg.car { height: auto; color: #fff; fill: currentColor; stroke: none; display: 
 .maint-label-group { display: flex; align-items: center; gap: 12px; }
 .maint-icon { width: 44px; height: 44px; border-radius: 15px; background: var(--tint); color: var(--blue); display: grid; place-items: center; flex-shrink: 0; }
 #vidange-card .maint-icon { color: var(--amber); background: color-mix(in srgb, var(--amber) 16%, var(--card)); }
+#quality-card .maint-icon { color: var(--green); background: color-mix(in srgb, var(--green) 16%, var(--card)); }
 .maint-text { font-size: 16px; font-weight: 800; color: var(--text); }
 .maint-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; font-weight: 600; }
 .maint-inputs { display: flex; gap: 10px; align-items: flex-end; }
@@ -229,6 +230,18 @@ svg.car { height: auto; color: #fff; fill: currentColor; stroke: none; display: 
   border: none; border-radius: 12px; padding: 10px 12px; outline: none; min-height: 40px;
 }
 .maint-number-input { text-align: center; }
+
+/* ----- Rappels personnalisés (bouton +) ----- */
+#custom-list { display: none; flex-direction: column; gap: 14px; }
+.custom-label-group { flex: 1; min-width: 0; }
+.custom-title-wrap { flex: 1; min-width: 0; }
+.custom-title-input { width: 100%; }
+.custom-title-wrap .maint-sub { margin-top: 6px; }
+.custom-del {
+  width: 36px; height: 36px; border-radius: 12px; border: none; background: none; color: var(--text-muted);
+  display: grid; place-items: center; cursor: pointer; flex-shrink: 0;
+}
+.custom-del:active { color: var(--red); background: color-mix(in srgb, var(--red) 10%, transparent); }
 
 /* ===== RÉGLAGES ===== */
 .settings-card { background: var(--card); border-radius: 24px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
@@ -330,3 +343,15 @@ html[dir="rtl"] .day-badge .dnum, html[dir="rtl"] .day-badge .dname { text-align
 .net-val small { font-size: 13px; margin-inline-start: 3px; opacity: .9; font-weight: 700; }
 .undo-btn { display: flex; align-items: center; justify-content: center; gap: 8px; }
 .end-btn svg.i { width: 20px; height: 20px; }
+
+/* ===== PAIEMENT : en ligne (Chargily) + WhatsApp ===== */
+.auth-body { justify-content: flex-start; }
+.auth-body > :first-child { margin-top: auto; }
+.auth-body > :last-child { margin-bottom: auto; }
+.pay-block { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.pay-title { font-size: 15px; font-weight: 800; color: var(--text); text-align: center; }
+.pay-sub { font-size: 12px; color: var(--text-muted); text-align: center; font-weight: 600; line-height: 1.5; margin-top: -4px; }
+.pay-divider { width: 100%; display: flex; align-items: center; gap: 12px; color: var(--text-muted); font-size: 12px; font-weight: 700; margin: 4px 0; }
+.pay-divider::before, .pay-divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+.btn-whatsapp.alt { background: var(--card); color: var(--text); box-shadow: none; border: 1.5px solid var(--border); }
+.pay-block .pending-msg { font-size: 13px; padding: 14px 16px; line-height: 1.6; }
