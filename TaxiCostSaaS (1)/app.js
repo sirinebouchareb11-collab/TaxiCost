@@ -11,6 +11,10 @@ var supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 var WHATSAPP_NUMBER = '213793270749'; // ← REMPLACE PAR TON VRAI NUMÉRO ex: 213770123456
 var PRIX_ABONNEMENT = '1000 DA';
 
+// Tes coordonnées pour recevoir les virements CCP (affichées aux chauffeurs sur l'écran de paiement)
+var CCP_NUMERO = '';   // ← ÉCRIS ICI ton numéro CCP / RIP  ex: '0012345678 clé 12'
+var CCP_NOM = '';      // ← ÉCRIS ICI le nom du titulaire du compte
+
 // ----- Connexion -----
 function doLogin() {
   var email = document.getElementById('login-email').value.trim();
@@ -153,30 +157,49 @@ function payOnline(plan) {
   supabaseClient.functions.invoke('create-checkout', { body: { plan: 'yearly' } })
     .then(function(res) {
       if (res.error || !res.data || !res.data.checkout_url) { showToast(t('pay_error')); return; }
+      // on garde l'identifiant du paiement pour pouvoir le vérifier au retour
+      try { localStorage.setItem('taxicost_checkout_id', res.data.checkout_id || ''); } catch (e) {}
       window.location.href = res.data.checkout_url;
     })
     .catch(function() { showToast(t('pay_error')); });
 }
 
+// Demande au serveur de vérifier le paiement auprès de Chargily (ne dépend pas du webhook)
+function verifyPayment(done) {
+  var cid = '';
+  try { cid = localStorage.getItem('taxicost_checkout_id') || ''; } catch (e) {}
+  supabaseClient.functions.invoke('check-payment', { body: { checkout_id: cid } })
+    .then(function(res) {
+      if (res && res.data && res.data.activated) {
+        try { localStorage.removeItem('taxicost_checkout_id'); } catch (e) {}
+      }
+    })
+    .catch(function() {})
+    .then(done);
+}
+
 // ----- Bouton "Vérifier mon accès" (après un paiement ou une activation manuelle) -----
 function refreshSubscription(isManual) {
   manualCheck = isManual === true;
-  supabaseClient.auth.getUser().then(function(res) {
-    var user = res.data && res.data.user;
-    if (user) routeSubscription(user);
+  verifyPayment(function() {
+    supabaseClient.auth.getUser().then(function(res) {
+      var user = res.data && res.data.user;
+      if (user) routeSubscription(user);
+    });
   });
 }
 
 // Écran bloqué (compte en attente / essai terminé) + suivi du retour de paiement
 function showBlockedScreen(id) {
   showScreen(id);
+  updateAuthMessages();
   updateRefLabels();
   if (paymentReturn === 'success' && paymentPollCount < 15) {
     // le paiement vient d'être fait : on revérifie toutes les 3 s en attendant l'activation
     paymentPollCount++;
     showToast(t('pay_success_wait'));
     clearTimeout(paymentPollTimer);
-    paymentPollTimer = setTimeout(function() { refreshSubscription(false); }, 3000);
+    paymentPollTimer = setTimeout(function() { refreshSubscription(false); }, paymentPollCount === 1 ? 600 : 3000);
   } else if (paymentReturn === 'failed') {
     paymentReturn = null;
     showToast(t('pay_failed'));
@@ -391,13 +414,13 @@ var I18N = {
     login_btn: 'Se connecter', forgot_link: 'Mot de passe oublié ?', to_register: "Pas encore de compte ? S'inscrire",
     forgot_title: 'Mot de passe oublié', forgot_subtitle: "Entre ton email, on t'enverra un lien pour le réinitialiser.",
     send_link: 'Envoyer le lien', back_to_login: 'Retour à la connexion',
-    title: 'Créer un compte', register_subtitle: 'Inscription gratuite · Abonnement 500 DA/mois',
+    register_title: 'Créer un compte', register_subtitle: 'Inscription gratuite · Abonnement 1000 DA/an',
     ph_name: 'Votre prénom', ph_password_hint: 'Mot de passe (min. 6 caractères)',
     register_btn: "S'inscrire", to_login: 'Déjà un compte ? Se connecter',
     pending_title: 'Compte en attente',
     pending_msg1: 'Votre compte a été créé !',
-    pending_msg2: 'Choisis ta formule, envoie le montant par CCP ou virement en indiquant bien ta référence',
-    pending_msg3: 'puis contacte-nous sur WhatsApp pour confirmer.',
+    pending_msg2: 'Envoie 1000 DA par CCP ou virement en indiquant bien ta référence',
+    pending_msg3: 'Contacte-nous sur WhatsApp pour confirmer.',
     plan_yearly: '1 an — 1000 DA',
     pending_note: 'Une fois votre paiement confirmé, votre accès sera activé sous 24h.', logout: 'Se déconnecter',
     expired_title: 'Essai terminé',
@@ -419,7 +442,7 @@ var I18N = {
     insurance: 'Assurance', not_set: 'Non renseignée', payment_date: 'Date de paiement',
     duration_months: 'Durée (mois)', oil_change: 'Vidange', oil_change_date: 'Date de la vidange',
     pay_online_title: 'Paiement en ligne', pay_online_sub: 'CCP (carte Edahabia) ou carte CIB — activation immédiate',
-    pay_or: 'ou', pay_manual_title: 'Virement CCP + WhatsApp',
+    pay_or: 'ou', pay_manual_title: 'Virement CCP + WhatsApp', ccp_holder: 'Titulaire',
     pay_redirecting: 'Redirection vers le paiement…', pay_error: 'Paiement en ligne indisponible, réessaie ou utilise WhatsApp',
     pay_success_wait: 'Paiement reçu ! Activation en cours…', pay_failed: 'Paiement annulé ou échoué',
     pay_check_btn: 'Vérifier mon accès', pay_still_pending: 'Pas encore activé, réessaie dans un instant',
@@ -463,13 +486,13 @@ var I18N = {
     login_btn: 'تسجيل الدخول', forgot_link: 'نسيت كلمة المرور؟', to_register: 'ما عندكش حساب؟ سجل',
     forgot_title: 'نسيت كلمة المرور', forgot_subtitle: 'دخل الإيميل ديالك، نبعتولك رابط باش تبدلها.',
     send_link: 'ابعث الرابط', back_to_login: 'رجوع لتسجيل الدخول',
-    register_title: 'إنشاء حساب',register_subtitle: 'تسجيل مجاني · اشتراك 1000 دج/سنة',
+    register_title: 'إنشاء حساب', register_subtitle: 'تسجيل مجاني · اشتراك 1000 دج/سنة',
     ph_name: 'الاسم', ph_password_hint: 'كلمة المرور (6 خانات على الأقل)',
     register_btn: 'سجل', to_login: 'عندك حساب؟ سجل الدخول',
     pending_title: 'الحساب في الانتظار',
     pending_msg1: 'تم إنشاء حسابك!',
-    pending_msg2: 'اختر الصيغة، ابعث المبلغ عبر CCP أو تحويل بنكي مع ذكر الرجعة ديالك',
-    pending_msg3: 'وبعدها تواصل معنا عبر واتساب.',
+    pending_msg2: 'ابعث 1000 دج عبر CCP أو تحويل بنكي مع ذكر الرجعة ديالك',
+    pending_msg3: 'تواصل معنا عبر واتساب للتأكيد.',
     plan_yearly: 'عام كامل — 1000 دج',
     pending_note: 'بمجرد تأكيد الدفع، سيتم تفعيل حسابك خلال 24 ساعة.', logout: 'تسجيل الخروج',
     expired_title: 'انتهت التجربة',
@@ -490,7 +513,7 @@ var I18N = {
     insurance: 'التأمين', not_set: 'غير محدد', payment_date: 'تاريخ الخلاص',
     duration_months: 'المدة (أشهر)', oil_change: 'الفيدانج', oil_change_date: 'تاريخ الفيدانج',
     pay_online_title: 'الدفع عبر الإنترنت', pay_online_sub: 'CCP (بطاقة الذهبية) أو بطاقة CIB — تفعيل فوري',
-    pay_or: 'أو', pay_manual_title: 'تحويل CCP + واتساب',
+    pay_or: 'أو', pay_manual_title: 'تحويل CCP + واتساب', ccp_holder: 'صاحب الحساب',
     pay_redirecting: 'جاري التحويل لصفحة الدفع…', pay_error: 'الدفع الإلكتروني غير متاح، أعد المحاولة أو استعمل واتساب',
     pay_success_wait: 'تم استلام الدفع! جاري التفعيل…', pay_failed: 'تم إلغاء الدفع أو فشل',
     pay_check_btn: 'تحقق من حسابي', pay_still_pending: 'لم يتم التفعيل بعد، أعد المحاولة بعد لحظة',
@@ -566,15 +589,17 @@ function applyTranslations() {
   updateTotal();
 }
 
+function ccpInfoHtml() {
+  if (!CCP_NUMERO) return '';
+  return '<br><br><strong>CCP : ' + escHtml(CCP_NUMERO) + '</strong>' +
+    (CCP_NOM ? '<br>' + t('ccp_holder') + ' : ' + escHtml(CCP_NOM) : '');
+}
+
 function updateAuthMessages() {
   var pEl = document.getElementById('pending-msg-text');
-  if (pEl) {
-    pEl.innerHTML = t('pending_msg1') + '<br><br>' + t('pending_msg2') + ' <strong id="ref-pending">...</strong>، ' + t('pending_msg3');
-  }
+  if (pEl) pEl.innerHTML = t('pending_msg3') + ccpInfoHtml();
   var eEl = document.getElementById('expired-msg-text');
-  if (eEl) {
-    eEl.innerHTML = t('expired_msg1') + '<br><br>' + t('pending_msg2') + ' <strong id="ref-expired">...</strong>، ' + t('pending_msg3');
-  }
+  if (eEl) eEl.innerHTML = t('pending_msg3') + ccpInfoHtml();
 }
 
 function setUiLang(lang) {
