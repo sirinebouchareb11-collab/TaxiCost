@@ -446,8 +446,8 @@ var I18N = {
     pay_redirecting: 'Redirection vers le paiement…', pay_error: 'Paiement en ligne indisponible, réessaie ou utilise WhatsApp',
     pay_success_wait: 'Paiement reçu ! Activation en cours…', pay_failed: 'Paiement annulé ou échoué',
     pay_check_btn: 'Vérifier mon accès', pay_still_pending: 'Pas encore activé, réessaie dans un instant',
-    quality: 'Contrôle qualité', quality_date: 'Date du contrôle',
-    quality_expires_in: 'Contrôle qualité à faire dans', quality_late: 'Contrôle qualité en retard !',
+   quality: 'Contrôle technique', quality_date: 'Date du contrôle',
+quality_expires_in: 'Contrôle technique à faire dans', quality_late: 'Contrôle technique en retard !',
     my_reminders: 'Mes rappels', add_reminder: 'Ajouter un rappel', reminder_name_ph: 'Nom du rappel (ex : essence)',
     reminder_default: 'Rappel', appointment_date: 'Date du rendez-vous',
     due_in: 'Dans', due_on: 'Le', due_today: "Aujourd'hui !", due_past: 'Dépassé depuis',
@@ -517,8 +517,8 @@ var I18N = {
     pay_redirecting: 'جاري التحويل لصفحة الدفع…', pay_error: 'الدفع الإلكتروني غير متاح، أعد المحاولة أو استعمل واتساب',
     pay_success_wait: 'تم استلام الدفع! جاري التفعيل…', pay_failed: 'تم إلغاء الدفع أو فشل',
     pay_check_btn: 'تحقق من حسابي', pay_still_pending: 'لم يتم التفعيل بعد، أعد المحاولة بعد لحظة',
-    quality: 'مراقبة الجودة', quality_date: 'تاريخ المراقبة',
-    quality_expires_in: 'مراقبة الجودة خلال', quality_late: 'مراقبة الجودة متأخرة!',
+    quality: 'المراقبة التقنية', quality_date: 'تاريخ المراقبة',
+quality_expires_in: 'المراقبة التقنية خلال', quality_late: 'المراقبة التقنية متأخرة!',
     my_reminders: 'تذكيراتي', add_reminder: 'أضف تذكير', reminder_name_ph: 'اسم التذكير (مثلا: الأسانس)',
     reminder_default: 'تذكير', appointment_date: 'تاريخ الموعد',
     due_in: 'بعد', due_on: 'يوم', due_today: 'اليوم!', due_past: 'فات منذ',
@@ -907,83 +907,78 @@ function updateTotal() {
 // ===========================================================
 // ===== VOIX — reconnaissance avec correction du bug "100" =====
 // ===========================================================
+// Dictionnaire des nombres (français + arabe / darija). Types : 'a' = on ajoute, 'h' = "cent", 't' = "mille"
+var NUM_WORDS = (function() {
+  function norm(w) {
+    return String(w).replace(/[\u064B-\u065F\u0670]/g, '').replace(/[أإآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه');
+  }
+  var d = {};
+  function add(type, map) { for (var k in map) d[norm(k)] = [type, map[k]]; }
+  add('a', { 'zéro':0,'zero':0,'un':1,'une':1,'deux':2,'trois':3,'quatre':4,'cinq':5,'six':6,'sept':7,'huit':8,'neuf':9,'dix':10,
+    'onze':11,'douze':12,'treize':13,'quatorze':14,'quinze':15,'seize':16,'dixsept':17,'dixhuit':18,'dixneuf':19,
+    'vingt':20,'trente':30,'quarante':40,'cinquante':50,'soixante':60,'septante':70,'huitante':80,'octante':80,'nonante':90,
+    'quatrevingt':80,'quatrevingtdix':90 });
+  add('h', { 'cent':100,'cents':100 });
+  add('t', { 'mille':1000,'milles':1000 });
+  add('a', { 'صفر':0,'واحد':1,'اثنين':2,'اتنين':2,'ثنين':2,'زوج':2,'ثلاثة':3,'تلاتة':3,'ثلاث':3,'أربعة':4,'ربعة':4,'أربع':4,
+    'خمسة':5,'خمس':5,'ستة':6,'ست':6,'سبعة':7,'سبع':7,'ثمانية':8,'تمانية':8,'تمنية':8,'ثمان':8,'تسعة':9,'تسع':9,'عشرة':10,'عشر':10,
+    'حداش':11,'احدعش':11,'طناش':12,'اثنعش':12,'تلطاش':13,'ثلاثطاش':13,'ربعطاش':14,'أربعطاش':14,'خمسطاش':15,'سطاش':16,'سبعطاش':17,
+    'تمنطاش':18,'تسعطاش':19,
+    'عشرين':20,'ثلاثين':30,'تلاتين':30,'أربعين':40,'ربعين':40,'خمسين':50,'ستين':60,'سبعين':70,'ثمانين':80,'تمانين':80,'تسعين':90,
+    'ميتين':200,'مئتين':200,'تلتمية':300,'ثلاثمية':300,'ثلاثمائة':300,'ربعمية':400,'أربعمية':400,'أربعمائة':400,
+    'خمسمية':500,'خمسمائة':500,'ستمية':600,'ستمائة':600,'سبعمية':700,'سبعمائة':700,'تمنمية':800,'ثمانمية':800,'ثمانمائة':800,
+    'تسعمية':900,'تسعمائة':900,'ألفين':2000 });
+  add('h', { 'مية':100,'مائة':100,'مئة':100,'مايه':100 });
+  add('t', { 'ألف':1000,'آلاف':1000,'الاف':1000 });
+  d.__norm = norm;
+  return d;
+})();
+
 function extractNumber(text) {
   if (!text) return null;
-  text = text.trim().toLowerCase();
-  // Nettoie la ponctuation parasite que Chrome ajoute parfois ("cent." "100," etc.)
-  text = text.replace(/[.,!?]/g, '').trim();
+  text = String(text).trim().toLowerCase();
+  // chiffres arabes-indiens (٦٠٠) -> chiffres normaux
+  text = text.replace(/[\u0660-\u0669]/g, function(c) { return String(c.charCodeAt(0) - 0x0660); })
+             .replace(/[\u06F0-\u06F9]/g, function(c) { return String(c.charCodeAt(0) - 0x06F0); });
+  // ponctuation parasite ("cent." "100,")
+  text = text.replace(/[.,!?؟،]/g, ' ').replace(/\u00a0/g, ' ').trim();
 
-  // 1. Cas direct : un chiffre est déjà présent ("100", "1 00" -> "100")
-  var digitsOnly = text.replace(/\s+/g, '');
-  var match = digitsOnly.match(/\d+/);
-  if (match) return parseInt(match[0]);
-
-  // 2. Nombres composés français (ex: "cent" = 100, "cent vingt" = 120, "quatre-vingt-dix" = 90)
-  var units = {
-    'zéro':0,'un':1,'une':1,'deux':2,'trois':3,'quatre':4,'cinq':5,
-    'six':6,'sept':7,'huit':8,'neuf':9,'dix':10,
-    'onze':11,'douze':12,'treize':13,'quatorze':14,'quinze':15,'seize':16,
-    'dix-sept':17,'dix-huit':18,'dix-neuf':19
-  };
-  var tens = {
-    'vingt':20,'trente':30,'quarante':40,'cinquante':50,
-    'soixante':60,'quatre-vingt':80,'quatre vingt':80,'quatre-vingts':80
-  };
-  var hundreds = { 'cent':100, 'cents':100 };
-
-  // Normalise "quatre-vingt-dix" etc en remplaçant le préfixe composé par un seul jeton
-  var normalized = text
-    .replace(/quatre[\s-]vingts?[\s-]dix/g, 'quatrevingtdix')
+  // "quatre-vingt-dix", "dix-sept"... -> un seul mot
+  text = text
+    .replace(/quatre[\s-]vingts?[\s-]dix(?=[\s-]|$)/g, 'quatrevingtdix')
     .replace(/quatre[\s-]vingts?/g, 'quatrevingt')
-    .replace(/dix[\s-]sept/g, 'dixsept')
-    .replace(/dix[\s-]huit/g, 'dixhuit')
-    .replace(/dix[\s-]neuf/g, 'dixneuf');
+    .replace(/(^|[\s-])dix[\s-]sept/g, '$1dixsept')
+    .replace(/(^|[\s-])dix[\s-]huit/g, '$1dixhuit')
+    .replace(/(^|[\s-])dix[\s-]neuf/g, '$1dixneuf');
 
-  var compoundTens = {
-    'quatrevingt': 80, 'quatrevingtdix': 90,
-    'dixsept': 17, 'dixhuit': 18, 'dixneuf': 19
-  };
+  // on sépare les chiffres des lettres : "6cents" -> "6" "cents"
+  var tokens = text.match(/\d+|[^\s\d-]+/g) || [];
+  var norm = NUM_WORDS.__norm;
+  var ignore = { 'da': 1, 'dzd': 1, 'dinar': 1, 'dinars': 1, 'دج': 1, 'دينار': 1, 'et': 1, 'و': 1 };
 
-  var words = normalized.split(/[\s-]+/).filter(Boolean);
-  if (words.length > 0) {
-    var total = 0;
-    var current = 0;
-    var matchedAny = false;
-    for (var i = 0; i < words.length; i++) {
-      var w = words[i];
-      if (hundreds[w] !== undefined) {
-        current = (current === 0 ? 1 : current) * 100;
-        total += current;
-        current = 0;
-        matchedAny = true;
-      } else if (compoundTens[w] !== undefined) {
-        current += compoundTens[w];
-        matchedAny = true;
-      } else if (tens[w] !== undefined) {
-        current += tens[w];
-        matchedAny = true;
-      } else if (units[w] !== undefined) {
-        current += units[w];
-        matchedAny = true;
-      }
-    }
-    total += current;
-    if (matchedAny) return total;
+  // Cas simple : que des chiffres ("600", "1 000", "6 00 DA") -> on les colle ensemble
+  var onlyDigits = tokens.length > 0 && tokens.every(function(tk) { return /^\d+$/.test(tk) || ignore[tk]; });
+  if (onlyDigits) {
+    var nums = tokens.filter(function(tk) { return /^\d+$/.test(tk); });
+    if (nums.length === 2 && /^\d$/.test(nums[0]) && nums[1] === '100') return parseInt(nums[0], 10) * 100; // "6 100" = 600
+    var digits = nums.join('');
+    return digits ? parseInt(digits, 10) : null;
   }
 
-  // 3. Mots arabes (un seul mot, pas composé)
-  var arabicWords = {
-    'صفر':0,'واحد':1,'اثنين':2,'ثلاثة':3,'أربعة':4,
-    'خمسة':5,'ستة':6,'سبعة':7,'ثمانية':8,'تسعة':9,
-    'عشرة':10,'عشرين':20,'ثلاثين':30,'أربعين':40,
-    'خمسين':50,'ستين':60,'سبعين':70,'ثمانين':80,
-    'تسعين':90,'مية':100,'مائة':100
-  };
-  for (var word in arabicWords) {
-    if (text.indexOf(word) !== -1) return arabicWords[word];
-  }
-
-  return null;
+  // Cas général : chiffres et mots mélangés ("6 cents", "deux mille cinq cents", "ستة مية")
+  var total = 0, current = 0, found = false;
+  tokens.forEach(function(tk) {
+    if (/^\d+$/.test(tk)) { current += parseInt(tk, 10); found = true; return; }
+    var key = norm(tk);
+    var entry = NUM_WORDS[key];
+    if (!entry && key.charAt(0) === 'و' && key.length > 1) entry = NUM_WORDS[key.slice(1)]; // "وخمسين" = "et cinquante"
+    if (!entry || key === '__norm') return;
+    found = true;
+    if (entry[0] === 'a') current += entry[1];
+    else if (entry[0] === 'h') { total += (current === 0 ? 1 : current) * 100; current = 0; }
+    else if (entry[0] === 't') { var acc = total + current; total = (acc === 0 ? 1 : acc) * 1000; current = 0; }
+  });
+  return found ? total + current : null;
 }
 
 var voiceTimeoutId = null;
@@ -1043,15 +1038,24 @@ function startVoice(clientId, field, isRetry) {
   recognition.onresult = function(event) {
     if (settled) return;
     cleanup();
-    for (var i = 0; i < event.results[0].length; i++) {
-      var num = extractNumber(event.results[0][i].transcript);
+    // Chrome coupe parfois la phrase en plusieurs morceaux ("six" puis "cents") : on les regroupe d'abord
+    var candidates = [];
+    if (event.results.length > 1) {
+      var parts = [];
+      for (var r = 0; r < event.results.length; r++) parts.push(event.results[r][0].transcript);
+      candidates.push(parts.join(' '));
+    }
+    for (var i = 0; i < event.results[0].length; i++) candidates.push(event.results[0][i].transcript);
+
+    for (var j = 0; j < candidates.length; j++) {
+      var num = extractNumber(candidates[j]);
       if (num !== null) {
         var input = document.getElementById('input-' + clientId + '-' + field);
         if (input) {
           input.value = num;
           if (field === 'depart') onDepart(clientId, String(num));
           else onArrivee(clientId, String(num));
-          showToast('✓ ' + num);
+          showToast('✓ ' + num + '  (' + String(candidates[j]).trim() + ')'); // on montre ce qui a été entendu
         }
         return;
       }
