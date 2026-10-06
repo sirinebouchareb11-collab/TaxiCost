@@ -459,7 +459,7 @@ quality_expires_in: 'Contrôle technique à faire dans', quality_late: 'Contrôl
     prayer_label: 'Rappels de prière', prayer_sub: '10 min avant chaque prière',
     prayer_wilaya: 'Wilaya', prayer_wilaya_sub: 'Utilisée pour calculer les horaires',
     dark_mode_label: 'Mode sombre', dark_mode_sub: 'Fond bleu nuit', account: 'Compte',
-    depart: 'Départ', arrivee: 'Arrivée',
+        depart: 'Départ', arrivee: 'Arrivée', price_label: 'Prix',
     client_singular: 'client', client_plural: 'clients', course_singular: 'course', course_plural: 'courses',
     toast_min_client: '⚠️ Renseigne au moins un client', toast_course_saved: '✓ Course enregistrée :',
     toast_course_cancelled: '↩ Course annulée :', confirm_clear_history: "Effacer tout l'historique des courses ? Cette action est irréversible.",
@@ -530,7 +530,7 @@ quality_expires_in: 'المراقبة التقنية خلال', quality_late: '�
     prayer_label: 'تذكير الصلاة', prayer_sub: '10 دقايق قبل كل صلاة',
     prayer_wilaya: 'الولاية', prayer_wilaya_sub: 'تستعمل لحساب أوقات الصلاة',
     dark_mode_label: 'الوضع الليلي', dark_mode_sub: 'خلفية كحلة', account: 'الحساب',
-    depart: 'انطلاق', arrivee: 'وصول',
+        depart: 'انطلاق', arrivee: 'وصول', price_label: 'السعر',
     client_singular: 'زبون', client_plural: 'زبائن', course_singular: 'كورسة', course_plural: 'كورسات',
     toast_min_client: '⚠️ دخل على الأقل زبون واحد', toast_course_saved: '✓ تسجلت الكورسة:',
     toast_course_cancelled: '↩ تلغات الكورسة:', confirm_clear_history: 'تصفية كل تاريخ الكورسات؟ هاد العملية ما ترجعش.',
@@ -1122,7 +1122,8 @@ function render() {
           '<button class="mic-btn" id="mic-' + c.id + '-arrivee" onclick="startVoice(' + c.id + ',\'arrivee\')">' + micIcon() + '</button>' +
         '</div>' +
       '</div>' +
-      '<div class="cell-right">' +
+            '<div class="cell-right">' +
+        '<div class="cell-result-label">' + t('price_label') + '</div>' +
         '<div class="cell-result empty" id="cost-' + c.id + '">—</div>' +
         (showDel ? '<div class="cell-del" onclick="removeClient(' + c.id + ')">×</div>' : '') +
       '</div>' +
